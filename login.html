@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Royal Eye Solar Power | Agent Login</title>
+  <meta name="description" content="Secure agent login for Royal Eye Solar Power daily stock & price portal." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Rajdhani:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand-red: #ff1e27;
+      --brand-red-hover: #ff3a42;
+      --brand-red-glow: 0 0 32px rgba(255, 30, 39, 0.55);
+      --brand-red-gradient: linear-gradient(135deg, #ff1e27 0%, #b80008 100%);
+      --bg-app: #09090c;
+      --bg-surface: #121217;
+      --bg-surface-elevated: #1a1a22;
+      --bg-input: #15151c;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-card: rgba(255, 255, 255, 0.12);
+      --border-focus: rgba(255, 30, 39, 0.7);
+      --text-primary: #ffffff;
+      --text-secondary: #b0b0c2;
+      --text-muted: #6f6f82;
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-numeric: 'Rajdhani', sans-serif;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --radius-xl: 24px;
+      --radius-full: 9999px;
+      --transition-fast: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-normal: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--bg-app);
+      font-family: var(--font-body);
+      color: var(--text-primary);
+      overflow: hidden;
+    }
+
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255,30,39,0.18) 0%, transparent 70%),
+                  radial-gradient(ellipse 60% 50% at 90% 80%, rgba(255,30,39,0.10) 0%, transparent 70%),
+                  #09090c;
+    }
+
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+    }
+
+    .particles { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,30,39,0.25);
+      animation: float-up linear infinite;
+    }
+    .particle:nth-child(1)  { width: 4px;  height: 4px;  left: 15%;  animation-duration: 12s; animation-delay: 0s; }
+    .particle:nth-child(2)  { width: 6px;  height: 6px;  left: 30%;  animation-duration: 18s; animation-delay: 2s; }
+    .particle:nth-child(3)  { width: 3px;  height: 3px;  left: 55%;  animation-duration: 14s; animation-delay: 4s; }
+    .particle:nth-child(4)  { width: 5px;  height: 5px;  left: 72%;  animation-duration: 16s; animation-delay: 1s; }
+    .particle:nth-child(5)  { width: 4px;  height: 4px;  left: 88%;  animation-duration: 20s; animation-delay: 6s; }
+    .particle:nth-child(6)  { width: 7px;  height: 7px;  left: 42%;  animation-duration: 22s; animation-delay: 3s; }
+
+    @keyframes float-up {
+      0%   { transform: translateY(110vh) scale(0.8); opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 0.6; }
+      100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+    }
+
+    .login-wrapper {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(18, 18, 23, 0.85);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-xl);
+      padding: 40px 36px 36px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,30,39,0.08), var(--brand-red-glow);
+      animation: card-appear 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @keyframes card-appear {
+      from { opacity: 0; transform: translateY(24px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0)    scale(1); }
+    }
+
+    .brand-section {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .brand-logo-wrap {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 18px;
+      background: rgba(255,30,39,0.08);
+      border: 1.5px solid rgba(255,30,39,0.25);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .brand-logo-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -40%;
+      background: conic-gradient(from 0deg, transparent 0deg, rgba(255,30,39,0.15) 60deg, transparent 120deg);
+      animation: spin-halo 6s linear infinite;
+    }
+
+    @keyframes spin-halo {
+      to { transform: rotate(360deg); }
+    }
+
+    .brand-logo-wrap img {
+      width: 54px;
+      height: 54px;
+      object-fit: contain;
+      position: relative;
+      z-index: 1;
+      filter: drop-shadow(0 0 8px rgba(255,30,39,0.4));
+    }
+
+    .brand-name {
+      font-family: var(--font-heading);
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+
+    .brand-name span { color: var(--brand-red); }
+
+    .brand-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .section-title {
+      font-family: var(--font-heading);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-align: center;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .section-title::before, .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-subtle);
+    }
+
+    .pin-display {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .pin-dot {
+      width: 52px;
+      height: 58px;
+      background: var(--bg-input);
+      border: 1.5px solid var(--border-card);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-numeric);
+      font-size: 28px;
+      font-weight: 700;
+      color: transparent;
+      transition: all var(--transition-fast);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pin-dot.filled {
+      border-color: rgba(255,30,39,0.55);
+      background: rgba(255,30,39,0.08);
+      color: var(--brand-red);
+      box-shadow: 0 0 12px rgba(255,30,39,0.2);
+      animation: dot-pop 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .pin-dot.filled::after {
+      content: '';
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--brand-red);
+      box-shadow: 0 0 8px rgba(255,30,39,0.5);
+    }
+
+    @keyframes dot-pop {
+      from { transform: scale(0.8); }
+      to   { transform: scale(1); }
+    }
+
+    .pin-dot.error {
+      border-color: rgba(255,30,39,0.9);
+      background: rgba(255,30,39,0.18);
+      animation: shake 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+    }
+
+    .pin-dot.error::after {
+      background: #ff334b;
+    }
+
+    .pin-dot.success {
+      border-color: rgba(0,230,118,0.7);
+      background: rgba(0,230,118,0.12);
+      box-shadow: 0 0 14px rgba(0,230,118,0.3);
+    }
+
+    .pin-dot.success::after {
+      background: #00e676;
+      box-shadow: 0 0 8px rgba(0,230,118,0.5);
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%       { transform: translateX(-6px); }
+      40%       { transform: translateX(6px); }
+      60%       { transform: translateX(-4px); }
+      80%       { transform: translateX(4px); }
+    }
+
+    .status-msg {
+      text-align: center;
+      margin-top: 12px;
+      margin-bottom: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      min-height: 20px;
+      transition: all var(--transition-fast);
+      color: transparent;
+    }
+
+    .status-msg.error   { color: #ff334b; animation: fade-in 0.2s ease; }
+    .status-msg.success { color: #00e676; animation: fade-in 0.2s ease; }
+
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .num-btn {
+      height: 56px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: var(--font-numeric);
+      font-size: 22px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .num-btn:hover {
+      background: #222230;
+      border-color: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    .num-btn:active {
+      transform: translateY(1px) scale(0.97);
+      box-shadow: none;
+    }
+
+    .num-btn.btn-del  { font-size: 18px; color: var(--text-muted); }
+    .num-btn.btn-del:hover  { color: #ffab00; border-color: rgba(255,171,0,0.3); }
+
+    .num-btn.btn-clear {
+      font-size: 11.5px;
+      font-family: var(--font-body);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .num-btn.btn-clear:hover { color: #ff334b; border-color: rgba(255,51,75,0.3); }
+
+    .login-footer {
+      margin-top: 28px;
+      text-align: center;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .login-footer strong { color: var(--text-secondary); }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0,230,118,0.1);
+      border: 1px solid rgba(0,230,118,0.25);
+      border-radius: var(--radius-full);
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #00e676;
+      letter-spacing: 0.4px;
+      margin-bottom: 18px;
+    }
+
+    .pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #00e676;
+      animation: pulse-ring 1.4s ease-out infinite;
+    }
+
+    @keyframes pulse-ring {
+      0%   { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.5); }
+      70%  { box-shadow: 0 0 0 8px rgba(0, 230, 118, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 230, 118, 0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-layer"></div>
+  <div class="grid-overlay"></div>
+
+  <div class="particles">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+  </div>
+
+  <div class="login-wrapper">
+    <div class="login-card" id="login-card">
+
+      <div class="brand-section">
+        <div style="display:flex; justify-content:center; margin-bottom:14px;">
+          <span class="live-badge">
+            <span class="pulse"></span>
+            Agent Portal — Live
+          </span>
+        </div>
+        <div class="brand-logo-wrap">
+          <img src="assets/logo.svg" alt="Royal Eye Solar Power" />
+        </div>
+        <div class="brand-name">ROYAL <span>EYE</span> SOLAR POWER</div>
+        <div class="brand-sub">REX Excellence &middot; Thrissur, Kerala</div>
+      </div>
+
+      <div class="section-title">Enter Agent PIN</div>
+
+      <div class="pin-display" id="pin-display">
+        <div class="pin-dot" id="dot-0"></div>
+        <div class="pin-dot" id="dot-1"></div>
+        <div class="pin-dot" id="dot-2"></div>
+        <div class="pin-dot" id="dot-3"></div>
+      </div>
+
+      <div class="status-msg" id="status-msg">&nbsp;</div>
+
+      <div class="numpad" id="numpad">
+        <button class="num-btn" id="btn-1" onclick="pinInput('1')">1</button>
+        <button class="num-btn" id="btn-2" onclick="pinInput('2')">2</button>
+        <button class="num-btn" id="btn-3" onclick="pinInput('3')">3</button>
+        <button class="num-btn" id="btn-4" onclick="pinInput('4')">4</button>
+        <button class="num-btn" id="btn-5" onclick="pinInput('5')">5</button>
+        <button class="num-btn" id="btn-6" onclick="pinInput('6')">6</button>
+        <button class="num-btn" id="btn-7" onclick="pinInput('7')">7</button>
+        <button class="num-btn" id="btn-8" onclick="pinInput('8')">8</button>
+        <button class="num-btn" id="btn-9" onclick="pinInput('9')">9</button>
+        <button class="num-btn btn-clear" id="btn-clear" onclick="pinClear()">Clear</button>
+        <button class="num-btn" id="btn-0" onclick="pinInput('0')">0</button>
+        <button class="num-btn btn-del" id="btn-del" onclick="pinDelete()" title="Backspace">&#9003;</button>
+      </div>
+
+    </div>
+
+    <div class="login-footer">
+      <strong>Royal Eye Solar Power</strong> &middot; Agent Daily Stock Portal<br />
+      Edamuttam, Thrissur, Kerala &mdash; 680568 &middot; &#9990; +91 98466 53834
+    </div>
+  </div>
+
+  <script>
+    const CORRECT_PIN = "0000";
+    const SESSION_KEY = "ROYAL_EYE_AGENT_AUTH";
+
+    // Skip login if already authenticated
+    if (sessionStorage.getItem(SESSION_KEY) === "true") {
+      window.location.replace("index.html");
+    }
+
+    let currentPin = "";
+    let locked = false;
+
+    function updateDots(state) {
+      for (let i = 0; i < 4; i++) {
+        const dot = document.getElementById("dot-" + i);
+        dot.className = "pin-dot";
+        if (state === "error" && i < currentPin.length) {
+          dot.classList.add("error");
+        } else if (state === "success" && i < currentPin.length) {
+          dot.classList.add("success");
+        } else if (!state && i < currentPin.length) {
+          dot.classList.add("filled");
+        }
+      }
+    }
+
+    function showStatus(msg, type) {
+      const el = document.getElementById("status-msg");
+      el.textContent = msg || "\u00a0";
+      el.className = "status-msg" + (type ? " " + type : "");
+    }
+
+    function pinInput(digit) {
+      if (locked || currentPin.length >= 4) return;
+      currentPin += digit;
+      updateDots();
+      showStatus("", "");
+      if (currentPin.length === 4) {
+        setTimeout(checkPin, 200);
+      }
+    }
+
+    function pinDelete() {
+      if (locked) return;
+      currentPin = currentPin.slice(0, -1);
+      updateDots();
+      showStatus("", "");
+    }
+
+    function pinClear() {
+      if (locked) return;
+      currentPin = "";
+      updateDots();
+      showStatus("", "");
+    }
+
+    function checkPin() {
+      if (currentPin === CORRECT_PIN) {
+        locked = true;
+        updateDots("success");
+        showStatus("Access Granted — Loading Portal...", "success");
+        document.getElementById("numpad").style.opacity = "0.4";
+        document.getElementById("numpad").style.pointerEvents = "none";
+        sessionStorage.setItem(SESSION_KEY, "true");
+        setTimeout(function() {
+          window.location.replace("index.html");
+        }, 900);
+      } else {
+        locked = true;
+        updateDots("error");
+        showStatus("Incorrect PIN — Please try again", "error");
+        setTimeout(function() {
+          currentPin = "";
+          locked = false;
+          updateDots();
+          showStatus("", "");
+        }, 1100);
+      }
+    }
+
+    // Physical keyboard support
+    document.addEventListener("keydown", function(e) {
+      if (locked) return;
+      if (e.key >= "0" && e.key <= "9") pinInput(e.key);
+      else if (e.key === "Backspace") pinDelete();
+      else if (e.key === "Escape" || e.key === "Delete") pinClear();
+    });
+  </script>
+
+</body>
+</html>

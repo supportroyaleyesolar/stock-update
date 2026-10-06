@@ -1,0 +1,73 @@
+/* =========================================================
+   ROYAL EYE SOLAR POWER - DESIGN TOKENS
+   Theme: High-Tech Solar Black & Crimson Red
+   ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Rajdhani:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Brand Primary - Solar Crimson Red */
+  --brand-red: #ff1e27;
+  --brand-red-hover: #ff3a42;
+  --brand-red-active: #d60812;
+  --brand-red-glow: 0 0 24px rgba(255, 30, 39, 0.45);
+  --brand-red-subtle: rgba(255, 30, 39, 0.12);
+  --brand-red-border: rgba(255, 30, 39, 0.35);
+  --brand-red-gradient: linear-gradient(135deg, #ff1e27 0%, #b80008 100%);
+  --brand-card-glow: 0 8px 32px 0 rgba(255, 30, 39, 0.15);
+
+  /* Deep Black & Carbon Backgrounds */
+  --bg-app: #09090c;
+  --bg-surface: #121217;
+  --bg-surface-elevated: #1a1a22;
+  --bg-surface-glass: rgba(18, 18, 23, 0.82);
+  --bg-input: #15151c;
+  --bg-card-hover: #1f1f2a;
+
+  /* Borders & Dividers */
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-card: rgba(255, 255, 255, 0.12);
+  --border-focus: rgba(255, 30, 39, 0.7);
+
+  /* Typography Colors */
+  --text-primary: #ffffff;
+  --text-secondary: #b0b0c2;
+  --text-muted: #6f6f82;
+  --text-highlight: #ff4d54;
+
+  /* Stock Status Colors */
+  --status-instock-text: #00e676;
+  --status-instock-bg: rgba(0, 230, 118, 0.12);
+  --status-instock-border: rgba(0, 230, 118, 0.35);
+
+  --status-low-text: #ffab00;
+  --status-low-bg: rgba(255, 171, 0, 0.14);
+  --status-low-border: rgba(255, 171, 0, 0.4);
+
+  --status-out-text: #ff334b;
+  --status-out-bg: rgba(255, 51, 75, 0.14);
+  --status-out-border: rgba(255, 51, 75, 0.4);
+
+  /* Typography Stacks */
+  --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-numeric: 'Rajdhani', monospace, sans-serif;
+
+  /* Shadows & Glassmorphism */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.8);
+  --glass-blur: blur(16px);
+
+  /* Radii */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
