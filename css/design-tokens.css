@@ -20,7 +20,7 @@
   --bg-app: #09090c;
   --bg-surface: #121217;
   --bg-surface-elevated: #1a1a22;
-  --bg-surface-glass: rgba(18, 18, 23, 0.82);
+  --bg-surface-glass: #141419;
   --bg-input: #15151c;
   --bg-card-hover: #1f1f2a;
 
@@ -57,7 +57,7 @@
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.6);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.8);
-  --glass-blur: blur(16px);
+  --glass-blur: none;
 
   /* Radii */
   --radius-xs: 4px;

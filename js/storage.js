@@ -283,7 +283,6 @@ const StorageService = {
       rexBadge:   "Royal Eye Excellence",
       exportedAt: new Date().toISOString(),
       location:   "Edamuttam, Thrissur, Kerala",
-      contacts:   ["+91 98466 53834", "+91 80758 73679", "+91 7034022603"],
       products:   await this.getInventory()
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });

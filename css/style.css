@@ -9,6 +9,10 @@
   padding: 0;
 }
 
+html {
+  scroll-behavior: auto;
+}
+
 html, body {
   background-color: var(--bg-app);
   color: var(--text-primary);
@@ -20,15 +24,20 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Background Ambient Glow & Solar Grid */
-body {
+/* GPU Hardware-accelerated fixed ambient background - ZERO repaint on scroll */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background-image: 
-    radial-gradient(circle at 15% 0%, rgba(255, 30, 39, 0.16) 0%, transparent 45%),
-    radial-gradient(circle at 85% 20%, rgba(229, 9, 20, 0.10) 0%, transparent 40%),
+    radial-gradient(circle at 15% 0%, rgba(255, 30, 39, 0.14) 0%, transparent 45%),
+    radial-gradient(circle at 85% 20%, rgba(229, 9, 20, 0.08) 0%, transparent 40%),
     linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
-  background-attachment: fixed;
+  transform: translateZ(0);
 }
 
 /* Container */
@@ -216,7 +225,6 @@ body {
 
 .kpi-card {
   background: var(--bg-surface-glass);
-  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-lg);
   padding: 18px 20px;
@@ -347,7 +355,6 @@ body {
    --------------------------------------------------------- */
 .action-toolbar {
   background: var(--bg-surface-glass);
-  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-lg);
   padding: 14px 18px;
@@ -500,10 +507,10 @@ body {
    --------------------------------------------------------- */
 .table-container {
   background: var(--bg-surface-glass);
-  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   box-shadow: var(--shadow-md);
   margin-bottom: 30px;
 }

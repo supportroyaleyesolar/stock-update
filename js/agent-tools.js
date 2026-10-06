@@ -60,11 +60,6 @@ ${specs.highlights ? `• *Highlights:* ${specs.highlights}` : ""}
 ✅ Clean Energy & Lower Electricity Bills
 ✅ Residential, Commercial & Industrial Solar
 ✅ Sales | Installation | Kerala Govt. & KSEB Approvals | AMC
-
-📞 *CONTACT SALES & BOOKING:*
-📱 +91 98466 53834
-📱 +91 80758 73679
-📱 +91 7034022603
 🏢 Royal Eye Solar Power, Edamuttam, Thrissur
 🌐 Daily Stock Verified: ${product.date}`;
 
@@ -163,7 +158,6 @@ ${specs.highlights ? `• *Highlights:* ${specs.highlights}` : ""}
           <div>
             <div class="title">ROYAL <span>EYE</span> SOLAR POWER</div>
             <div class="subtitle">REX - Royal Eye Excellence | Edamuttam, Thrissur, Kerala</div>
-            <div class="subtitle">Phone: +91 98466 53834 / +91 80758 73679 / +91 7034022603</div>
           </div>
           <div class="meta">
             <h3 style="margin: 0; color: #ff1e27;">DAILY AGENT STOCK SHEET</h3>
@@ -668,7 +662,7 @@ ${specs.highlights ? `• *Highlights:* ${specs.highlights}` : ""}
    </Row>
    <Row ss:Height="18">
     <Cell ss:MergeAcross="${cols.length - 1}" ss:StyleID="HeaderSub">
-     <Data ss:Type="String">Edamuttam, Thrissur, Kerala | Hotline: +91 98466 53834 / +91 80758 73679 | Generated: ${new Date().toLocaleString("en-IN")}</Data>
+     <Data ss:Type="String">Edamuttam, Thrissur, Kerala | Generated: ${new Date().toLocaleString("en-IN")}</Data>
     </Cell>
    </Row>
    <Row ss:Height="8"></Row>
