@@ -53,10 +53,8 @@ const StorageService = {
 
       if (error) throw error;
 
-      if (!data || data.length === 0) {
-        // First run: seed default inventory
-        this._cache = [...DEFAULT_INVENTORY];
-        await this.saveInventory(this._cache);
+      if (!data) {
+        this._cache = [];
       } else {
         // Map DB rows → product objects
         this._cache = data.map(row => ({
@@ -80,6 +78,7 @@ const StorageService = {
           sort_order: row.sort_order
         }));
       }
+      this._saveLocalFallback(this._cache);
     } catch (err) {
       console.error("Supabase getInventory error:", err);
       this._cache = this._loadLocalFallback();
@@ -91,10 +90,17 @@ const StorageService = {
   // ── SAVE / UPSERT full inventory list ─────────────────────────
   async saveInventory(products) {
     this._cache = products;
+    this._saveLocalFallback(products);
 
     const sb = getSupabase();
-    if (!sb) {
-      this._saveLocalFallback(products);
+    if (!sb) return;
+
+    if (!products || products.length === 0) {
+      try {
+        await sb.from(TABLE_NAME).delete().neq("product_id", "____never____");
+      } catch (err) {
+        console.error("Supabase clearInventory error:", err);
+      }
       return;
     }
 
@@ -201,19 +207,18 @@ const StorageService = {
   async deleteProduct(id) {
     const products = await this.getInventory();
     const filtered = products.filter(p => p.id !== id);
+    this._cache = filtered;
+    this._saveLocalFallback(filtered);
 
     const sb = getSupabase();
     if (sb) {
       try {
         const { error } = await sb.from(TABLE_NAME).delete().eq("product_id", id);
         if (error) throw error;
-        this._cache = filtered;
       } catch (err) {
         console.error("Supabase deleteProduct error:", err);
         await this.saveInventory(filtered);
       }
-    } else {
-      await this.saveInventory(filtered);
     }
 
     return filtered;
@@ -310,12 +315,14 @@ const StorageService = {
   _loadLocalFallback() {
     try {
       const stored = localStorage.getItem("ROYAL_EYE_INVENTORY_V1");
-      if (stored) {
+      if (stored !== null) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) { /* ignore */ }
-    return [...DEFAULT_INVENTORY];
+    const initial = [...DEFAULT_INVENTORY];
+    this._saveLocalFallback(initial);
+    return initial;
   },
 
   _saveLocalFallback(products) {
