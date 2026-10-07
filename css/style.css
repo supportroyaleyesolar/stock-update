@@ -777,3 +777,118 @@ body::before {
 .footer-link:hover {
   color: var(--brand-red);
 }
+
+/* ---------------------------------------------------------
+   MOBILE RESPONSIVENESS & SCREEN RATIO FIXES
+   --------------------------------------------------------- */
+@media (max-width: 640px) {
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+  }
+
+  .app-container {
+    padding: 0 10px 40px 10px;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .top-header {
+    padding: 12px 0;
+    gap: 10px;
+  }
+
+  .brand-logo-img {
+    height: 44px;
+    max-width: 100%;
+  }
+
+  .header-meta {
+    gap: 8px;
+  }
+
+  .live-agent-badge {
+    padding: 6px 12px;
+    font-size: 11.5px;
+  }
+
+  .contact-quick-pill {
+    padding: 6px 10px;
+    font-size: 11.5px;
+  }
+
+  .partners-banner {
+    padding: 8px 12px;
+    margin: 12px 0 16px 0;
+  }
+
+  .partners-list {
+    gap: 8px;
+  }
+
+  .partner-tag {
+    font-size: 10.5px;
+    padding: 3px 8px;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .kpi-card {
+    padding: 12px 14px;
+  }
+
+  .kpi-value {
+    font-size: 22px;
+  }
+
+  .kpi-label {
+    font-size: 11px;
+  }
+
+  .kpi-meta {
+    display: none;
+  }
+
+  .action-toolbar {
+    gap: 10px;
+  }
+
+  .search-input {
+    font-size: 13px;
+    padding: 10px 12px 10px 38px;
+  }
+
+  .brand-filter-select, .stock-toggle-btn {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+
+  .toolbar-right .btn {
+    flex: 1 1 calc(50% - 6px);
+    justify-content: center;
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+
+  .toolbar-right .btn-primary {
+    flex: 1 1 100%;
+  }
+
+  .category-tabs-container {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+    gap: 6px;
+  }
+
+  .category-tab {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+}
