@@ -7,3 +7,4 @@
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer-when-downgrade"
+    Cache-Control = "no-cache, no-store, must-revalidate"

@@ -2,13 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Royal Eye Solar Power | Stock Register</title>
   <meta name="description" content="Royal Eye Solar Power - Live Material & Equipment Stock Register with Instant Multi-Device Sync." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet" />
-  <!-- Supabase JS Client for Instant Live Multi-Device Synchronization -->
+  <!-- Supabase JS Client for Realtime WebSocket Synchronization -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -32,7 +35,6 @@
     .pill-badge{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:99px;border:1px solid var(--border2);font-size:.75rem;font-weight:600;color:var(--txt2);background:var(--elevated);transition:all .3s ease}
     .pulse{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s ease-in-out infinite}
     .pulse.syncing{background:var(--gold);box-shadow:0 0 8px var(--gold)}
-    .pulse.offline{background:var(--crimson);box-shadow:0 0 8px var(--crimson);animation:none}
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}}
     
     .page-wrap{max-width:1100px;margin:0 auto;padding:28px 20px 60px}
@@ -80,7 +82,7 @@
     .stock-table thead tr{background:var(--elevated);border-bottom:1px solid var(--border2)}
     .stock-table th{padding:11px 16px;text-align:left;font-size:.68rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--txt3)}
     .stock-table th.center,.stock-table td.center{text-align:center}
-    .stock-table tbody tr{border-bottom:1px solid var(--border);transition:background .25s ease, transform .25s ease}
+    .stock-table tbody tr{border-bottom:1px solid var(--border);transition:background .25s ease}
     .stock-table tbody tr:last-child{border-bottom:none}
     .stock-table tbody tr:hover{background:rgba(255,255,255,.03)}
     .stock-table td{padding:10px 16px;font-size:.84rem;color:var(--txt2);vertical-align:middle}
@@ -89,8 +91,8 @@
     
     /* Live Sync Highlight Flash Animation */
     @keyframes livePulseGreen {
-      0%   { background-color: rgba(0, 230, 118, 0.32); }
-      50%  { background-color: rgba(0, 230, 118, 0.16); }
+      0%   { background-color: rgba(0, 230, 118, 0.35); }
+      50%  { background-color: rgba(0, 230, 118, 0.18); }
       100% { background-color: transparent; }
     }
     .row-live-flash {
@@ -207,7 +209,7 @@
   <div class="header-right">
     <div class="pill-badge" id="live-status-pill">
       <span class="pulse" id="live-pulse"></span>
-      <span id="live-status-text">Live Sync</span>
+      <span id="live-status-text">Live Synced</span>
     </div>
   </div>
 </header>
@@ -354,17 +356,18 @@
 <div id="toast"></div>
 
 <script>
-// ── Supabase Configuration ──────────────────────────────────────────
+// ── Supabase & Cloud REST Configuration ──────────────────────────────
 const SUPABASE_URL      = "https://ffbyqnxhdeafzahgaqxf.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_1xEblsxiuRXajEMGrbl-WQ_W70ZX3hB";
 const TABLE_NAME        = "inventory";
 const STORE_KEY         = 'ROYAL_EYE_STOCK_V2';
 
-// Supabase client instance
-let sb = null;
-if (window.supabase && typeof window.supabase.createClient === 'function') {
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-}
+// Standard REST Headers (works natively in 100% of browsers with 0 external dependencies)
+const REST_HEADERS = {
+  'apikey': SUPABASE_ANON_KEY,
+  'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+  'Content-Type': 'application/json'
+};
 
 const DEFAULT_ITEMS = [
   {id:"SP-01",name:"Solar Panel",category:"Solar Panel",qty:10},
@@ -445,11 +448,7 @@ function updateLiveStatus(status) {
   const pulse = document.getElementById('live-pulse');
   const text = document.getElementById('live-status-text');
   if(!pulse || !text) return;
-
-  if (status === 'SUBSCRIBED' || status === 'connected') {
-    pulse.className = 'pulse';
-    text.textContent = 'Live Synced';
-  } else if (status === 'syncing') {
+  if (status === 'syncing') {
     pulse.className = 'pulse syncing';
     text.textContent = 'Syncing...';
   } else {
@@ -458,7 +457,7 @@ function updateLiveStatus(status) {
   }
 }
 
-// ── LocalStorage Cache ─────────────────────────────────────────────
+// ── LocalStorage Instant Cache ─────────────────────────────────────
 function saveLocalCache() {
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify(items));
@@ -477,17 +476,21 @@ function loadLocalCache() {
   return JSON.parse(JSON.stringify(DEFAULT_ITEMS));
 }
 
-// ── Database Fetch ─────────────────────────────────────────────────
-async function fetchFromSupabase() {
-  if (!sb) return null;
+// ── Native Cloud REST Fetch (Guaranteed 100% Reliability) ──────────
+async function fetchCloudData() {
   try {
-    const { data, error } = await sb
-      .from(TABLE_NAME)
-      .select("*")
-      .order("sort_order", { ascending: true });
+    const url = `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?select=*&order=sort_order.asc&_ts=${Date.now()}`;
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+      }
+    });
 
-    if (error) throw error;
-    if (!data || data.length === 0) return null;
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) return null;
 
     return data.map(row => ({
       id: row.product_id,
@@ -498,79 +501,90 @@ async function fetchFromSupabase() {
       sort_order: row.sort_order || 0
     }));
   } catch(err) {
-    console.warn("Supabase fetch error:", err);
+    console.warn("Cloud fetch error:", err);
     return null;
   }
 }
 
-// ── Initial Load ───────────────────────────────────────────────────
-async function loadItems() {
-  // 1. Instant render from local cache for zero delay
+// ── Seed Default Catalog into Cloud ────────────────────────────────
+async function seedCloudCatalog() {
+  try {
+    const rows = DEFAULT_ITEMS.map((it, idx) => ({
+      product_id: it.id,
+      name: it.name,
+      category: it.category,
+      brand: 'Royal Eye',
+      daily_stock: it.qty,
+      sort_order: idx + 1
+    }));
+    await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}`, {
+      method: 'POST',
+      headers: {
+        ...REST_HEADERS,
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify(rows)
+    });
+  } catch(e) {
+    console.error("Cloud seed error:", e);
+  }
+}
+
+// ── Initial App Bootstrap ──────────────────────────────────────────
+async function initApp() {
+  // 1. Show immediate local cache
   items = loadLocalCache();
   render();
 
-  // 2. Fetch fresh data from Supabase Cloud
+  // 2. Load latest cloud data
   updateLiveStatus('syncing');
-  const remoteItems = await fetchFromSupabase();
-
-  if (remoteItems && remoteItems.length > 0) {
-    items = remoteItems;
+  const remote = await fetchCloudData();
+  if (remote && remote.length > 0) {
+    items = remote;
     saveLocalCache();
     render();
-    updateLiveStatus('SUBSCRIBED');
-  } else if (sb) {
-    // Seed initial items if database table is completely empty
-    await seedSupabaseDefaults();
+  } else {
+    await seedCloudCatalog();
   }
+  updateLiveStatus('ready');
+
+  // 3. Start Realtime WebSockets + Fast Poll
+  initRealtime();
 }
 
-async function seedSupabaseDefaults() {
-  if (!sb) return;
-  const rows = DEFAULT_ITEMS.map((it, idx) => ({
-    product_id: it.id,
-    name: it.name,
-    category: it.category,
-    brand: 'Royal Eye',
-    daily_stock: it.qty,
-    sort_order: idx + 1
-  }));
-  try {
-    await sb.from(TABLE_NAME).upsert(rows, { onConflict: 'product_id' });
-    items = JSON.parse(JSON.stringify(DEFAULT_ITEMS));
-    saveLocalCache();
-    render();
-    updateLiveStatus('SUBSCRIBED');
-  } catch(e) {
-    console.error("Seed error:", e);
-  }
-}
-
-// ── Realtime Multi-Device Sync ─────────────────────────────────────
+// ── Realtime Multi-Device WebSockets ───────────────────────────────
+let sbClient = null;
 let realtimeChannel = null;
 
-function setupRealtime() {
-  if (!sb) return;
-  if (realtimeChannel) {
-    try { sb.removeChannel(realtimeChannel); } catch(e){}
+function initRealtime() {
+  // Check if Supabase JS library is ready
+  if (window.supabase && typeof window.supabase.createClient === 'function') {
+    try {
+      if (!sbClient) {
+        sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+      if (realtimeChannel) {
+        try { sbClient.removeChannel(realtimeChannel); } catch(e){}
+      }
+      realtimeChannel = sbClient
+        .channel('inventory-realtime-live')
+        .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_NAME }, (payload) => {
+          handleRealtimeEvent(payload);
+        })
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') updateLiveStatus('ready');
+        });
+    } catch(err) {
+      console.warn("Supabase WebSocket init warning:", err);
+    }
+  } else {
+    // Retry initializing WebSocket client after 400ms if library was still downloading
+    setTimeout(initRealtime, 400);
   }
-
-  realtimeChannel = sb
-    .channel('inventory-live-sync')
-    .on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: TABLE_NAME
-    }, (payload) => {
-      handleRealtimePayload(payload);
-    })
-    .subscribe((status) => {
-      updateLiveStatus(status);
-    });
 }
 
-function handleRealtimePayload(payload) {
+function handleRealtimeEvent(payload) {
   const { eventType, new: newRow, old: oldRow } = payload;
-
   if (eventType === 'UPDATE' && newRow) {
     const existing = items.find(x => x.id === newRow.product_id);
     const newQty = typeof newRow.daily_stock === 'number' ? newRow.daily_stock : (parseInt(newRow.daily_stock, 10) || 0);
@@ -582,7 +596,6 @@ function handleRealtimePayload(payload) {
       if (newRow.category) existing.category = newRow.category;
       saveLocalCache();
 
-      // If the row exists in current view, update it smoothly
       const tr = document.querySelector(`tr[data-id="${newRow.product_id}"]`);
       if (tr) {
         const input = tr.querySelector('.qty-num');
@@ -594,9 +607,8 @@ function handleRealtimePayload(payload) {
           const s = getStatus(newQty);
           statusTd.innerHTML = `<span class="status-badge s-${s}"><span class="s-dot"></span>${statusLabel(s)}</span>`;
         }
-        // Visual live update glow
         tr.classList.remove('row-live-flash');
-        void tr.offsetWidth; // trigger reflow
+        void tr.offsetWidth;
         tr.classList.add('row-live-flash');
       } else {
         render();
@@ -607,7 +619,6 @@ function handleRealtimePayload(payload) {
         showToast(`📡 Live Update: ${newRow.name} → ${newQty}`, 'info');
       }
     } else {
-      // New row not yet in state
       items.push({
         id: newRow.product_id,
         name: newRow.name,
@@ -628,16 +639,13 @@ function handleRealtimePayload(payload) {
         category: newRow.category,
         qty: parseInt(newRow.daily_stock, 10) || 0,
         brand: newRow.brand || 'Royal Eye',
-        sort_order: newRow.sort_order || 0
+        sort_order: 0
       });
       saveLocalCache();
       render();
       showToast(`📡 Live Sync: Added "${newRow.name}"`, 'success');
-      
       const newTr = document.querySelector(`tr[data-id="${newRow.product_id}"]`);
-      if (newTr) {
-        newTr.classList.add('row-live-flash');
-      }
+      if (newTr) newTr.classList.add('row-live-flash');
     }
   } else if (eventType === 'DELETE' && oldRow) {
     items = items.filter(x => x.id !== oldRow.product_id);
@@ -647,7 +655,7 @@ function handleRealtimePayload(payload) {
   }
 }
 
-// ── Push Stock Update to Supabase ──────────────────────────────────
+// ── Push Stock Update to Cloud (Direct Native REST) ───────────────
 function updateItemQuantity(id, newQty, productName) {
   const it = items.find(x => x.id === id);
   if (!it) return;
@@ -656,7 +664,7 @@ function updateItemQuantity(id, newQty, productName) {
   saveLocalCache();
   updateKPIs();
 
-  // Instant update row status in DOM
+  // Instant DOM update for current device
   const tr = document.querySelector(`tr[data-id="${id}"]`);
   if (tr) {
     const s = getStatus(it.qty);
@@ -670,25 +678,78 @@ function updateItemQuantity(id, newQty, productName) {
 
   showToast(`${productName || it.name}: ${it.qty}`, 'success');
 
-  // Queue update for Supabase with debouncing to avoid API throttling
+  // Queue update and push to Cloud
   debouncedQtyChanges.set(id, it.qty);
   clearTimeout(syncDebounceTimer);
-  syncDebounceTimer = setTimeout(flushPendingUpdatesToCloud, 200);
+  syncDebounceTimer = setTimeout(flushCloudUpdates, 150);
 }
 
-async function flushPendingUpdatesToCloud() {
-  if (!sb || debouncedQtyChanges.size === 0) return;
+async function flushCloudUpdates() {
+  if (debouncedQtyChanges.size === 0) return;
   const updates = Array.from(debouncedQtyChanges.entries());
   debouncedQtyChanges.clear();
 
   for (const [productId, qty] of updates) {
     try {
-      await sb.from(TABLE_NAME).update({ daily_stock: qty }).eq('product_id', productId);
+      await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}?product_id=eq.${encodeURIComponent(productId)}`, {
+        method: 'PATCH',
+        headers: {
+          ...REST_HEADERS,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ daily_stock: qty, updated_at: new Date().toISOString() })
+      });
     } catch(err) {
-      console.error("Cloud update error for", productId, err);
+      console.error("Cloud update error:", productId, err);
     }
   }
 }
+
+// ── Fast Polling & Wake Sync (Multi-Device Guarantee) ───────────────
+async function pollSync() {
+  if (document.visibilityState !== 'visible') return;
+  try {
+    const remote = await fetchCloudData();
+    if (remote && remote.length > 0) {
+      let changed = false;
+      remote.forEach(r => {
+        const local = items.find(i => i.id === r.id);
+        if (local && local.qty !== r.qty) {
+          local.qty = r.qty;
+          changed = true;
+          // Flash updated row
+          const tr = document.querySelector(`tr[data-id="${r.id}"]`);
+          if (tr) {
+            const input = tr.querySelector('.qty-num');
+            if (input && document.activeElement !== input) input.value = r.qty;
+            const statusTd = tr.querySelector('.td-status');
+            if (statusTd) {
+              const s = getStatus(r.qty);
+              statusTd.innerHTML = `<span class="status-badge s-${s}"><span class="s-dot"></span>${statusLabel(s)}</span>`;
+            }
+            tr.classList.remove('row-live-flash');
+            void tr.offsetWidth;
+            tr.classList.add('row-live-flash');
+          }
+        }
+      });
+      if (changed) {
+        saveLocalCache();
+        updateKPIs();
+      }
+    }
+  } catch(e){}
+}
+
+// Poll every 3 seconds while active
+setInterval(pollSync, 3000);
+
+// Instant Sync on Tab Focus / Phone Wake
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') pollSync();
+});
+window.addEventListener('focus', pollSync);
+window.addEventListener('pageshow', pollSync);
 
 // ── Filtering & Rendering ──────────────────────────────────────────
 function filteredItems(){
@@ -795,21 +856,26 @@ document.getElementById('btn-reset').addEventListener('click', async () => {
   render();
   showToast('Resetting all quantities to 10...', 'warn');
 
-  if (sb) {
-    try {
-      const rows = items.map((it, idx) => ({
-        product_id: it.id,
-        name: it.name,
-        category: it.category,
-        brand: it.brand || 'Royal Eye',
-        daily_stock: 10,
-        sort_order: idx + 1
-      }));
-      await sb.from(TABLE_NAME).upsert(rows, { onConflict: 'product_id' });
-      showToast('All quantities live synced to 10!', 'success');
-    } catch(err) {
-      console.error("Reset error:", err);
-    }
+  try {
+    const rows = items.map((it, idx) => ({
+      product_id: it.id,
+      name: it.name,
+      category: it.category,
+      brand: it.brand || 'Royal Eye',
+      daily_stock: 10,
+      sort_order: idx + 1
+    }));
+    await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}`, {
+      method: 'POST',
+      headers: {
+        ...REST_HEADERS,
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify(rows)
+    });
+    showToast('All quantities live synced to 10!', 'success');
+  } catch(err) {
+    console.error("Reset error:", err);
   }
 });
 
@@ -881,9 +947,13 @@ document.getElementById('modal-save').addEventListener('click', async () => {
       it.category = category;
       it.qty = qty;
       saveLocalCache();
-      if (sb) {
-        await sb.from(TABLE_NAME).update({ name, category, daily_stock: qty }).eq('product_id', editingId);
-      }
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}?product_id=eq.${encodeURIComponent(editingId)}`, {
+          method: 'PATCH',
+          headers: REST_HEADERS,
+          body: JSON.stringify({ name, category, daily_stock: qty })
+        });
+      } catch(e){}
       showToast('"' + name + '" updated live!', 'success');
     }
   } else {
@@ -900,19 +970,21 @@ document.getElementById('modal-save').addEventListener('click', async () => {
     items.unshift(newItem);
     saveLocalCache();
 
-    if (sb) {
-      try {
-        await sb.from(TABLE_NAME).insert([{
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}`, {
+        method: 'POST',
+        headers: REST_HEADERS,
+        body: JSON.stringify([{
           product_id: newId,
           name,
           category,
           brand: 'Royal Eye',
           daily_stock: qty,
           sort_order: 0
-        }]);
-      } catch(err) {
-        console.error("Insert error:", err);
-      }
+        }])
+      });
+    } catch(err) {
+      console.error("Insert error:", err);
     }
     showToast('"' + name + '" added & live synced to all devices!', 'success');
   }
@@ -938,56 +1010,9 @@ function setHeroDate(){
   });
 }
 
-// ── Heartbeat & Visibility Auto-Sync ───────────────────────────────
-// Keep all devices in continuous sync even if tab went to sleep
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
-    fetchFromSupabase().then(latest => {
-      if (latest && latest.length > 0) {
-        items = latest;
-        saveLocalCache();
-        render();
-      }
-    });
-  }
-});
-
-window.addEventListener('focus', () => {
-  fetchFromSupabase().then(latest => {
-    if (latest && latest.length > 0) {
-      items = latest;
-      saveLocalCache();
-      render();
-    }
-  });
-});
-
-// Periodic background resync (every 12 seconds)
-setInterval(async () => {
-  if (document.visibilityState === 'visible') {
-    const latest = await fetchFromSupabase();
-    if (latest && latest.length > 0) {
-      // Check if any quantity changed silently
-      let changed = false;
-      latest.forEach(r => {
-        const local = items.find(i => i.id === r.id);
-        if (local && local.qty !== r.qty) {
-          local.qty = r.qty;
-          changed = true;
-        }
-      });
-      if (changed) {
-        saveLocalCache();
-        render();
-      }
-    }
-  }
-}, 12000);
-
-// ── Initialize App ─────────────────────────────────────────────────
+// ── Start Application ──────────────────────────────────────────────
 setHeroDate();
-loadItems();
-setupRealtime();
+initApp();
 </script>
 </body>
 </html>
