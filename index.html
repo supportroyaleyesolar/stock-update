@@ -35,6 +35,7 @@
     .pill-badge{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:99px;border:1px solid var(--border2);font-size:.75rem;font-weight:600;color:var(--txt2);background:var(--elevated);transition:all .3s ease}
     .pulse{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s ease-in-out infinite}
     .pulse.syncing{background:var(--gold);box-shadow:0 0 8px var(--gold)}
+    .pulse.offline{background:var(--crimson);box-shadow:0 0 8px var(--crimson);animation:none}
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}}
     
     .page-wrap{max-width:1100px;margin:0 auto;padding:28px 20px 60px}
@@ -91,12 +92,12 @@
     
     /* Live Sync Highlight Flash Animation */
     @keyframes livePulseGreen {
-      0%   { background-color: rgba(0, 230, 118, 0.35); }
-      50%  { background-color: rgba(0, 230, 118, 0.18); }
+      0%   { background-color: rgba(0, 230, 118, 0.40); }
+      50%  { background-color: rgba(0, 230, 118, 0.20); }
       100% { background-color: transparent; }
     }
     .row-live-flash {
-      animation: livePulseGreen 1.6s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+      animation: livePulseGreen 1.8s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
     }
     
     .cat-badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:.68rem;font-weight:700;letter-spacing:.5px;white-space:nowrap}
@@ -308,7 +309,7 @@
 
   <footer class="app-footer">
     <span><strong>Royal Eye Solar Power</strong> &bull; Edamuttam, Thrissur, Kerala - 680568</span>
-    <span>📡 Live Cloud Database Synced across all devices in real-time</span>
+    <span>📡 Live Cloud Database Synced &bull; v3.2</span>
   </footer>
 </div>
 
@@ -362,7 +363,6 @@ const SUPABASE_ANON_KEY = "sb_publishable_1xEblsxiuRXajEMGrbl-WQ_W70ZX3hB";
 const TABLE_NAME        = "inventory";
 const STORE_KEY         = 'ROYAL_EYE_STOCK_V2';
 
-// Standard REST Headers (works natively in 100% of browsers with 0 external dependencies)
 const REST_HEADERS = {
   'apikey': SUPABASE_ANON_KEY,
   'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
@@ -457,11 +457,10 @@ function updateLiveStatus(status) {
   }
 }
 
-// ── LocalStorage Instant Cache ─────────────────────────────────────
+// ── LocalStorage Cache ─────────────────────────────────────────────
 function saveLocalCache() {
   try {
     localStorage.setItem(STORE_KEY, JSON.stringify(items));
-    localStorage.setItem(STORE_KEY + '_TIMESTAMP', new Date().toISOString());
   } catch(e){}
 }
 
@@ -506,49 +505,23 @@ async function fetchCloudData() {
   }
 }
 
-// ── Seed Default Catalog into Cloud ────────────────────────────────
-async function seedCloudCatalog() {
-  try {
-    const rows = DEFAULT_ITEMS.map((it, idx) => ({
-      product_id: it.id,
-      name: it.name,
-      category: it.category,
-      brand: 'Royal Eye',
-      daily_stock: it.qty,
-      sort_order: idx + 1
-    }));
-    await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}`, {
-      method: 'POST',
-      headers: {
-        ...REST_HEADERS,
-        'Prefer': 'resolution=merge-duplicates'
-      },
-      body: JSON.stringify(rows)
-    });
-  } catch(e) {
-    console.error("Cloud seed error:", e);
-  }
-}
-
 // ── Initial App Bootstrap ──────────────────────────────────────────
 async function initApp() {
-  // 1. Show immediate local cache
+  // 1. Instant local render
   items = loadLocalCache();
   render();
 
-  // 2. Load latest cloud data
+  // 2. Fetch fresh cloud database
   updateLiveStatus('syncing');
   const remote = await fetchCloudData();
   if (remote && remote.length > 0) {
     items = remote;
     saveLocalCache();
     render();
-  } else {
-    await seedCloudCatalog();
   }
   updateLiveStatus('ready');
 
-  // 3. Start Realtime WebSockets + Fast Poll
+  // 3. Connect Realtime WebSocket channel
   initRealtime();
 }
 
@@ -557,7 +530,6 @@ let sbClient = null;
 let realtimeChannel = null;
 
 function initRealtime() {
-  // Check if Supabase JS library is ready
   if (window.supabase && typeof window.supabase.createClient === 'function') {
     try {
       if (!sbClient) {
@@ -568,90 +540,18 @@ function initRealtime() {
       }
       realtimeChannel = sbClient
         .channel('inventory-realtime-live')
-        .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_NAME }, (payload) => {
-          handleRealtimeEvent(payload);
+        .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_NAME }, () => {
+          // Instant sync when postgres event is received
+          pollSync();
         })
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') updateLiveStatus('ready');
         });
     } catch(err) {
-      console.warn("Supabase WebSocket init warning:", err);
+      console.warn("Realtime WebSocket init error:", err);
     }
   } else {
-    // Retry initializing WebSocket client after 400ms if library was still downloading
     setTimeout(initRealtime, 400);
-  }
-}
-
-function handleRealtimeEvent(payload) {
-  const { eventType, new: newRow, old: oldRow } = payload;
-  if (eventType === 'UPDATE' && newRow) {
-    const existing = items.find(x => x.id === newRow.product_id);
-    const newQty = typeof newRow.daily_stock === 'number' ? newRow.daily_stock : (parseInt(newRow.daily_stock, 10) || 0);
-
-    if (existing) {
-      const prevQty = existing.qty;
-      existing.qty = newQty;
-      if (newRow.name) existing.name = newRow.name;
-      if (newRow.category) existing.category = newRow.category;
-      saveLocalCache();
-
-      const tr = document.querySelector(`tr[data-id="${newRow.product_id}"]`);
-      if (tr) {
-        const input = tr.querySelector('.qty-num');
-        if (input && document.activeElement !== input) {
-          input.value = newQty;
-        }
-        const statusTd = tr.querySelector('.td-status');
-        if (statusTd) {
-          const s = getStatus(newQty);
-          statusTd.innerHTML = `<span class="status-badge s-${s}"><span class="s-dot"></span>${statusLabel(s)}</span>`;
-        }
-        tr.classList.remove('row-live-flash');
-        void tr.offsetWidth;
-        tr.classList.add('row-live-flash');
-      } else {
-        render();
-      }
-
-      updateKPIs();
-      if (prevQty !== newQty) {
-        showToast(`📡 Live Update: ${newRow.name} → ${newQty}`, 'info');
-      }
-    } else {
-      items.push({
-        id: newRow.product_id,
-        name: newRow.name,
-        category: newRow.category,
-        qty: newQty,
-        brand: newRow.brand || 'Royal Eye',
-        sort_order: newRow.sort_order || 999
-      });
-      saveLocalCache();
-      render();
-    }
-  } else if (eventType === 'INSERT' && newRow) {
-    const exists = items.some(x => x.id === newRow.product_id);
-    if (!exists) {
-      items.unshift({
-        id: newRow.product_id,
-        name: newRow.name,
-        category: newRow.category,
-        qty: parseInt(newRow.daily_stock, 10) || 0,
-        brand: newRow.brand || 'Royal Eye',
-        sort_order: 0
-      });
-      saveLocalCache();
-      render();
-      showToast(`📡 Live Sync: Added "${newRow.name}"`, 'success');
-      const newTr = document.querySelector(`tr[data-id="${newRow.product_id}"]`);
-      if (newTr) newTr.classList.add('row-live-flash');
-    }
-  } else if (eventType === 'DELETE' && oldRow) {
-    items = items.filter(x => x.id !== oldRow.product_id);
-    saveLocalCache();
-    render();
-    showToast(`📡 Live Sync: Product removed`, 'warn');
   }
 }
 
@@ -678,10 +578,10 @@ function updateItemQuantity(id, newQty, productName) {
 
   showToast(`${productName || it.name}: ${it.qty}`, 'success');
 
-  // Queue update and push to Cloud
+  // Queue update and push to Cloud immediately
   debouncedQtyChanges.set(id, it.qty);
   clearTimeout(syncDebounceTimer);
-  syncDebounceTimer = setTimeout(flushCloudUpdates, 150);
+  syncDebounceTimer = setTimeout(flushCloudUpdates, 80);
 }
 
 async function flushCloudUpdates() {
@@ -705,18 +605,27 @@ async function flushCloudUpdates() {
   }
 }
 
-// ── Fast Polling & Wake Sync (Multi-Device Guarantee) ───────────────
+// ── Fast Multi-Device Live Sync Engine ─────────────────────────────
 async function pollSync() {
-  if (document.visibilityState !== 'visible') return;
   try {
     const remote = await fetchCloudData();
-    if (remote && remote.length > 0) {
-      let changed = false;
-      remote.forEach(r => {
-        const local = items.find(i => i.id === r.id);
-        if (local && local.qty !== r.qty) {
+    if (!remote || remote.length === 0) return;
+
+    // Check if new products were added or removed
+    if (remote.length !== items.length) {
+      items = remote;
+      saveLocalCache();
+      render();
+      return;
+    }
+
+    let qtyChanged = false;
+    remote.forEach(r => {
+      const local = items.find(i => i.id === r.id);
+      if (local) {
+        if (local.qty !== r.qty) {
           local.qty = r.qty;
-          changed = true;
+          qtyChanged = true;
           // Flash updated row
           const tr = document.querySelector(`tr[data-id="${r.id}"]`);
           if (tr) {
@@ -732,17 +641,25 @@ async function pollSync() {
             tr.classList.add('row-live-flash');
           }
         }
-      });
-      if (changed) {
-        saveLocalCache();
-        updateKPIs();
+        if (r.name && local.name !== r.name) local.name = r.name;
+        if (r.category && local.category !== r.category) local.category = r.category;
+      } else {
+        // Missing item found
+        items = remote;
+        qtyChanged = true;
+        render();
       }
+    });
+
+    if (qtyChanged) {
+      saveLocalCache();
+      updateKPIs();
     }
   } catch(e){}
 }
 
-// Poll every 3 seconds while active
-setInterval(pollSync, 3000);
+// Poll every 2 seconds for continuous synchronization across all devices
+setInterval(pollSync, 2000);
 
 // Instant Sync on Tab Focus / Phone Wake
 document.addEventListener('visibilitychange', () => {
@@ -983,6 +900,8 @@ document.getElementById('modal-save').addEventListener('click', async () => {
           sort_order: 0
         }])
       });
+      // Trigger instant poll sync
+      pollSync();
     } catch(err) {
       console.error("Insert error:", err);
     }
