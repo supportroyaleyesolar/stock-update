@@ -4,10 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Royal Eye Solar Power | Stock Register</title>
-  <meta name="description" content="Royal Eye Solar Power - Internal Material & Equipment Stock Register." />
+  <meta name="description" content="Royal Eye Solar Power - Live Material & Equipment Stock Register with Instant Multi-Device Sync." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet" />
+  <!-- Supabase JS Client for Instant Live Multi-Device Synchronization -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html{font-size:15px;scroll-behavior:smooth}
@@ -27,9 +29,11 @@
     .brand-title span{color:var(--gold)}
     .brand-sub{font-size:.7rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--txt3)}
     .header-right{display:flex;align-items:center;gap:10px}
-    .pill-badge{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:99px;border:1px solid var(--border2);font-size:.75rem;font-weight:500;color:var(--txt2);background:var(--elevated)}
-    .pulse{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s ease-in-out infinite}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .pill-badge{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:99px;border:1px solid var(--border2);font-size:.75rem;font-weight:600;color:var(--txt2);background:var(--elevated);transition:all .3s ease}
+    .pulse{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s ease-in-out infinite}
+    .pulse.syncing{background:var(--gold);box-shadow:0 0 8px var(--gold)}
+    .pulse.offline{background:var(--crimson);box-shadow:0 0 8px var(--crimson);animation:none}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}}
     
     .page-wrap{max-width:1100px;margin:0 auto;padding:28px 20px 60px}
     .page-hero{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:24px 28px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
@@ -76,12 +80,22 @@
     .stock-table thead tr{background:var(--elevated);border-bottom:1px solid var(--border2)}
     .stock-table th{padding:11px 16px;text-align:left;font-size:.68rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--txt3)}
     .stock-table th.center,.stock-table td.center{text-align:center}
-    .stock-table tbody tr{border-bottom:1px solid var(--border);transition:background var(--tr)}
+    .stock-table tbody tr{border-bottom:1px solid var(--border);transition:background .25s ease, transform .25s ease}
     .stock-table tbody tr:last-child{border-bottom:none}
     .stock-table tbody tr:hover{background:rgba(255,255,255,.03)}
     .stock-table td{padding:10px 16px;font-size:.84rem;color:var(--txt2);vertical-align:middle}
     .td-sl{color:var(--txt3);font-size:.75rem;font-weight:600;width:48px}
     .td-name{color:var(--txt1);font-weight:500}
+    
+    /* Live Sync Highlight Flash Animation */
+    @keyframes livePulseGreen {
+      0%   { background-color: rgba(0, 230, 118, 0.32); }
+      50%  { background-color: rgba(0, 230, 118, 0.16); }
+      100% { background-color: transparent; }
+    }
+    .row-live-flash {
+      animation: livePulseGreen 1.6s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+    }
     
     .cat-badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:.68rem;font-weight:700;letter-spacing:.5px;white-space:nowrap}
     .cat-panel{background:rgba(201,162,39,.15);color:#e0a820;border:1px solid rgba(201,162,39,.35)}
@@ -103,7 +117,7 @@
     .qty-btn:first-child{border-radius:6px 0 0 6px}
     .qty-btn:last-child{border-radius:0 6px 6px 0}
     .qty-btn:hover{background:var(--red-soft);border-color:var(--red-border);color:var(--txt1)}
-    .qty-num{width:50px;height:28px;text-align:center;background:var(--surface);border:1px solid var(--border2);border-left:none;border-right:none;color:var(--txt1);font-family:'Rajdhani',sans-serif;font-size:.95rem;font-weight:700;outline:none;transition:var(--tr)}
+    .qty-num{width:54px;height:28px;text-align:center;background:var(--surface);border:1px solid var(--border2);border-left:none;border-right:none;color:var(--txt1);font-family:'Rajdhani',sans-serif;font-size:.95rem;font-weight:700;outline:none;transition:var(--tr)}
     .qty-num:focus{background:var(--elevated);border-color:var(--gold)}
     
     .empty-state{padding:60px 20px;text-align:center;display:none}
@@ -135,6 +149,8 @@
     #toast.show{transform:translateY(0);opacity:1}
     #toast.success{border-color:rgba(0,230,118,.4);color:var(--green)}
     #toast.warn{border-color:rgba(255,171,0,.4);color:var(--amber)}
+    #toast.info{border-color:rgba(56,189,248,.4);color:#38bdf8}
+    
     .app-footer{margin-top:40px;padding:16px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.72rem;color:var(--txt3)}
     .app-footer strong{color:var(--txt2)}
     
@@ -189,7 +205,10 @@
     <div class="brand-sub">Material Stock Register</div>
   </div>
   <div class="header-right">
-    <div class="pill-badge"><span class="pulse"></span>&nbsp;Live Stock</div>
+    <div class="pill-badge" id="live-status-pill">
+      <span class="pulse" id="live-pulse"></span>
+      <span id="live-status-text">Live Sync</span>
+    </div>
   </div>
 </header>
 
@@ -197,7 +216,7 @@
   <div class="page-hero">
     <div>
       <h1>Material <span>Stock Register</span></h1>
-      <p>Manage real-time inventory for Solar Panels, Inverters, Lithium Batteries, Combos &amp; Installation Kits.</p>
+      <p>Real-time live multi-device inventory for Solar Panels, Inverters, Lithium Batteries, Combos &amp; Installation Kits.</p>
     </div>
     <div class="hero-date" id="hero-date"></div>
   </div>
@@ -287,7 +306,7 @@
 
   <footer class="app-footer">
     <span><strong>Royal Eye Solar Power</strong> &bull; Edamuttam, Thrissur, Kerala - 680568</span>
-    <span>Quantities stored locally in this browser &bull; Update to your actual stock</span>
+    <span>📡 Live Cloud Database Synced across all devices in real-time</span>
   </footer>
 </div>
 
@@ -331,9 +350,23 @@
     </div>
   </div>
 </div>
+
 <div id="toast"></div>
+
 <script>
-const DEFAULT_ITEMS=[
+// ── Supabase Configuration ──────────────────────────────────────────
+const SUPABASE_URL      = "https://ffbyqnxhdeafzahgaqxf.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_1xEblsxiuRXajEMGrbl-WQ_W70ZX3hB";
+const TABLE_NAME        = "inventory";
+const STORE_KEY         = 'ROYAL_EYE_STOCK_V2';
+
+// Supabase client instance
+let sb = null;
+if (window.supabase && typeof window.supabase.createClient === 'function') {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+const DEFAULT_ITEMS = [
   {id:"SP-01",name:"Solar Panel",category:"Solar Panel",qty:10},
   {id:"INV-01",name:"Inverter",category:"Inverter",qty:10},
   {id:"LB-01",name:"Lithium Battery",category:"Lithium Battery",qty:10},
@@ -387,39 +420,16 @@ const DEFAULT_ITEMS=[
   {id:"V-12",name:"Welding Rod End Cap",category:"Welding Kit",qty:10}
 ];
 
-const STORE_KEY='ROYAL_EYE_STOCK_V2';
-let items=[];
+let items = [];
+let activeCat = 'all', activeStatus = 'all', searchTerm = '';
+let syncDebounceTimer = null;
+const debouncedQtyChanges = new Map();
 
-function loadItems(){
-  try{
-    const r=localStorage.getItem(STORE_KEY);
-    if(r){
-      items=JSON.parse(r);
-    } else {
-      items=JSON.parse(JSON.stringify(DEFAULT_ITEMS));
-      saveItems();
-    }
-  }
-  catch(e){
-    items=JSON.parse(JSON.stringify(DEFAULT_ITEMS));
-  }
-}
-function saveItems(){localStorage.setItem(STORE_KEY,JSON.stringify(items));}
-function getStatus(q){return q<=0?'out':q<=5?'low':'in';}
-function statusLabel(s){return s==='in'?'In Stock':s==='low'?'Low Stock':'Out of Stock';}
-function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function dateStamp(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-
-let activeCat='all',activeStatus='all',searchTerm='';
-
-function filteredItems(){
-  return items.filter(it=>{
-    const catOk=activeCat==='all'||it.category===activeCat;
-    const stOk=activeStatus==='all'||getStatus(it.qty)===activeStatus;
-    const srOk=it.name.toLowerCase().includes(searchTerm.toLowerCase())||it.category.toLowerCase().includes(searchTerm.toLowerCase());
-    return catOk&&stOk&&srOk;
-  });
-}
+// ── Helpers ────────────────────────────────────────────────────────
+function getStatus(q){ return q <= 0 ? 'out' : q <= 5 ? 'low' : 'in'; }
+function statusLabel(s){ return s === 'in' ? 'In Stock' : s === 'low' ? 'Low Stock' : 'Out of Stock'; }
+function escHtml(s){ return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function dateStamp(){ const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
 
 function catClass(c){
   if(c==='Solar Panel') return 'cat-panel';
@@ -431,133 +441,553 @@ function catClass(c){
   return 'cat-welding';
 }
 
+function updateLiveStatus(status) {
+  const pulse = document.getElementById('live-pulse');
+  const text = document.getElementById('live-status-text');
+  if(!pulse || !text) return;
+
+  if (status === 'SUBSCRIBED' || status === 'connected') {
+    pulse.className = 'pulse';
+    text.textContent = 'Live Synced';
+  } else if (status === 'syncing') {
+    pulse.className = 'pulse syncing';
+    text.textContent = 'Syncing...';
+  } else {
+    pulse.className = 'pulse';
+    text.textContent = 'Live Synced';
+  }
+}
+
+// ── LocalStorage Cache ─────────────────────────────────────────────
+function saveLocalCache() {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(items));
+    localStorage.setItem(STORE_KEY + '_TIMESTAMP', new Date().toISOString());
+  } catch(e){}
+}
+
+function loadLocalCache() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_ITEMS));
+}
+
+// ── Database Fetch ─────────────────────────────────────────────────
+async function fetchFromSupabase() {
+  if (!sb) return null;
+  try {
+    const { data, error } = await sb
+      .from(TABLE_NAME)
+      .select("*")
+      .order("sort_order", { ascending: true });
+
+    if (error) throw error;
+    if (!data || data.length === 0) return null;
+
+    return data.map(row => ({
+      id: row.product_id,
+      name: row.name,
+      category: row.category,
+      qty: typeof row.daily_stock === 'number' ? row.daily_stock : (parseInt(row.daily_stock, 10) || 0),
+      brand: row.brand || 'Royal Eye',
+      sort_order: row.sort_order || 0
+    }));
+  } catch(err) {
+    console.warn("Supabase fetch error:", err);
+    return null;
+  }
+}
+
+// ── Initial Load ───────────────────────────────────────────────────
+async function loadItems() {
+  // 1. Instant render from local cache for zero delay
+  items = loadLocalCache();
+  render();
+
+  // 2. Fetch fresh data from Supabase Cloud
+  updateLiveStatus('syncing');
+  const remoteItems = await fetchFromSupabase();
+
+  if (remoteItems && remoteItems.length > 0) {
+    items = remoteItems;
+    saveLocalCache();
+    render();
+    updateLiveStatus('SUBSCRIBED');
+  } else if (sb) {
+    // Seed initial items if database table is completely empty
+    await seedSupabaseDefaults();
+  }
+}
+
+async function seedSupabaseDefaults() {
+  if (!sb) return;
+  const rows = DEFAULT_ITEMS.map((it, idx) => ({
+    product_id: it.id,
+    name: it.name,
+    category: it.category,
+    brand: 'Royal Eye',
+    daily_stock: it.qty,
+    sort_order: idx + 1
+  }));
+  try {
+    await sb.from(TABLE_NAME).upsert(rows, { onConflict: 'product_id' });
+    items = JSON.parse(JSON.stringify(DEFAULT_ITEMS));
+    saveLocalCache();
+    render();
+    updateLiveStatus('SUBSCRIBED');
+  } catch(e) {
+    console.error("Seed error:", e);
+  }
+}
+
+// ── Realtime Multi-Device Sync ─────────────────────────────────────
+let realtimeChannel = null;
+
+function setupRealtime() {
+  if (!sb) return;
+  if (realtimeChannel) {
+    try { sb.removeChannel(realtimeChannel); } catch(e){}
+  }
+
+  realtimeChannel = sb
+    .channel('inventory-live-sync')
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: TABLE_NAME
+    }, (payload) => {
+      handleRealtimePayload(payload);
+    })
+    .subscribe((status) => {
+      updateLiveStatus(status);
+    });
+}
+
+function handleRealtimePayload(payload) {
+  const { eventType, new: newRow, old: oldRow } = payload;
+
+  if (eventType === 'UPDATE' && newRow) {
+    const existing = items.find(x => x.id === newRow.product_id);
+    const newQty = typeof newRow.daily_stock === 'number' ? newRow.daily_stock : (parseInt(newRow.daily_stock, 10) || 0);
+
+    if (existing) {
+      const prevQty = existing.qty;
+      existing.qty = newQty;
+      if (newRow.name) existing.name = newRow.name;
+      if (newRow.category) existing.category = newRow.category;
+      saveLocalCache();
+
+      // If the row exists in current view, update it smoothly
+      const tr = document.querySelector(`tr[data-id="${newRow.product_id}"]`);
+      if (tr) {
+        const input = tr.querySelector('.qty-num');
+        if (input && document.activeElement !== input) {
+          input.value = newQty;
+        }
+        const statusTd = tr.querySelector('.td-status');
+        if (statusTd) {
+          const s = getStatus(newQty);
+          statusTd.innerHTML = `<span class="status-badge s-${s}"><span class="s-dot"></span>${statusLabel(s)}</span>`;
+        }
+        // Visual live update glow
+        tr.classList.remove('row-live-flash');
+        void tr.offsetWidth; // trigger reflow
+        tr.classList.add('row-live-flash');
+      } else {
+        render();
+      }
+
+      updateKPIs();
+      if (prevQty !== newQty) {
+        showToast(`📡 Live Update: ${newRow.name} → ${newQty}`, 'info');
+      }
+    } else {
+      // New row not yet in state
+      items.push({
+        id: newRow.product_id,
+        name: newRow.name,
+        category: newRow.category,
+        qty: newQty,
+        brand: newRow.brand || 'Royal Eye',
+        sort_order: newRow.sort_order || 999
+      });
+      saveLocalCache();
+      render();
+    }
+  } else if (eventType === 'INSERT' && newRow) {
+    const exists = items.some(x => x.id === newRow.product_id);
+    if (!exists) {
+      items.unshift({
+        id: newRow.product_id,
+        name: newRow.name,
+        category: newRow.category,
+        qty: parseInt(newRow.daily_stock, 10) || 0,
+        brand: newRow.brand || 'Royal Eye',
+        sort_order: newRow.sort_order || 0
+      });
+      saveLocalCache();
+      render();
+      showToast(`📡 Live Sync: Added "${newRow.name}"`, 'success');
+      
+      const newTr = document.querySelector(`tr[data-id="${newRow.product_id}"]`);
+      if (newTr) {
+        newTr.classList.add('row-live-flash');
+      }
+    }
+  } else if (eventType === 'DELETE' && oldRow) {
+    items = items.filter(x => x.id !== oldRow.product_id);
+    saveLocalCache();
+    render();
+    showToast(`📡 Live Sync: Product removed`, 'warn');
+  }
+}
+
+// ── Push Stock Update to Supabase ──────────────────────────────────
+function updateItemQuantity(id, newQty, productName) {
+  const it = items.find(x => x.id === id);
+  if (!it) return;
+
+  it.qty = Math.max(0, parseInt(newQty, 10) || 0);
+  saveLocalCache();
+  updateKPIs();
+
+  // Instant update row status in DOM
+  const tr = document.querySelector(`tr[data-id="${id}"]`);
+  if (tr) {
+    const s = getStatus(it.qty);
+    const statusTd = tr.querySelector('.td-status');
+    if (statusTd) {
+      statusTd.innerHTML = `<span class="status-badge s-${s}"><span class="s-dot"></span>${statusLabel(s)}</span>`;
+    }
+    const input = tr.querySelector('.qty-num');
+    if (input && input.value != it.qty) input.value = it.qty;
+  }
+
+  showToast(`${productName || it.name}: ${it.qty}`, 'success');
+
+  // Queue update for Supabase with debouncing to avoid API throttling
+  debouncedQtyChanges.set(id, it.qty);
+  clearTimeout(syncDebounceTimer);
+  syncDebounceTimer = setTimeout(flushPendingUpdatesToCloud, 200);
+}
+
+async function flushPendingUpdatesToCloud() {
+  if (!sb || debouncedQtyChanges.size === 0) return;
+  const updates = Array.from(debouncedQtyChanges.entries());
+  debouncedQtyChanges.clear();
+
+  for (const [productId, qty] of updates) {
+    try {
+      await sb.from(TABLE_NAME).update({ daily_stock: qty }).eq('product_id', productId);
+    } catch(err) {
+      console.error("Cloud update error for", productId, err);
+    }
+  }
+}
+
+// ── Filtering & Rendering ──────────────────────────────────────────
+function filteredItems(){
+  return items.filter(it => {
+    const catOk = activeCat === 'all' || it.category === activeCat;
+    const stOk = activeStatus === 'all' || getStatus(it.qty) === activeStatus;
+    const srOk = (it.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                 (it.category || '').toLowerCase().includes(searchTerm.toLowerCase());
+    return catOk && stOk && srOk;
+  });
+}
+
 function render(){
-  const list=filteredItems();
-  const tbody=document.getElementById('stock-tbody');
-  const empty=document.getElementById('empty-state');
-  document.getElementById('visible-count').textContent='Showing '+list.length+' of '+items.length+' items';
-  if(!list.length){tbody.innerHTML='';empty.style.display='block';updateKPIs();return;}
-  empty.style.display='none';
-  tbody.innerHTML=list.map((it,i)=>{
-    const s=getStatus(it.qty);
-    return '<tr data-id="'+it.id+'">'+
-      '<td class="td-sl">'+(i+1)+'</td>'+
-      '<td class="td-name">'+
-        '<div class="name-wrap">'+
-          '<span class="sl-badge-m">'+(i+1)+'</span>'+
-          '<span class="item-name-text">'+escHtml(it.name)+'</span>'+
-        '</div>'+
-      '</td>'+
-      '<td class="td-cat"><span class="cat-badge '+catClass(it.category)+'">'+escHtml(it.category)+'</span></td>'+
-      '<td class="td-status center"><span class="status-badge s-'+s+'"><span class="s-dot"></span>'+statusLabel(s)+'</span></td>'+
-      '<td class="td-qty center"><div class="qty-wrap">'+
-        '<button class="qty-btn" data-action="dec" data-id="'+it.id+'" title="Decrease">&#8722;</button>'+
-        '<input class="qty-num" type="number" min="0" value="'+it.qty+'" data-id="'+it.id+'" />'+
-        '<button class="qty-btn" data-action="inc" data-id="'+it.id+'" title="Increase">+</button>'+
-      '</div></td>'+
+  const list = filteredItems();
+  const tbody = document.getElementById('stock-tbody');
+  const empty = document.getElementById('empty-state');
+  document.getElementById('visible-count').textContent = 'Showing ' + list.length + ' of ' + items.length + ' items';
+
+  if(!list.length){
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    updateKPIs();
+    return;
+  }
+
+  empty.style.display = 'none';
+  tbody.innerHTML = list.map((it, i) => {
+    const s = getStatus(it.qty);
+    return '<tr data-id="' + it.id + '">' +
+      '<td class="td-sl">' + (i+1) + '</td>' +
+      '<td class="td-name">' +
+        '<div class="name-wrap">' +
+          '<span class="sl-badge-m">' + (i+1) + '</span>' +
+          '<span class="item-name-text">' + escHtml(it.name) + '</span>' +
+        '</div>' +
+      '</td>' +
+      '<td class="td-cat"><span class="cat-badge ' + catClass(it.category) + '">' + escHtml(it.category) + '</span></td>' +
+      '<td class="td-status center"><span class="status-badge s-' + s + '"><span class="s-dot"></span>' + statusLabel(s) + '</span></td>' +
+      '<td class="td-qty center"><div class="qty-wrap">' +
+        '<button class="qty-btn" data-action="dec" data-id="' + it.id + '" title="Decrease">&#8722;</button>' +
+        '<input class="qty-num" type="number" min="0" value="' + it.qty + '" data-id="' + it.id + '" />' +
+        '<button class="qty-btn" data-action="inc" data-id="' + it.id + '" title="Increase">+</button>' +
+      '</div></td>' +
     '</tr>';
   }).join('');
+
   updateKPIs();
 }
 
 function updateKPIs(){
-  document.getElementById('kpi-total').textContent=items.length;
-  document.getElementById('kpi-in').textContent=items.filter(i=>getStatus(i.qty)==='in').length;
-  document.getElementById('kpi-low').textContent=items.filter(i=>getStatus(i.qty)==='low').length;
-  document.getElementById('kpi-out').textContent=items.filter(i=>getStatus(i.qty)==='out').length;
+  document.getElementById('kpi-total').textContent = items.length;
+  document.getElementById('kpi-in').textContent    = items.filter(i => getStatus(i.qty) === 'in').length;
+  document.getElementById('kpi-low').textContent   = items.filter(i => getStatus(i.qty) === 'low').length;
+  document.getElementById('kpi-out').textContent   = items.filter(i => getStatus(i.qty) === 'out').length;
 }
 
-document.getElementById('cat-tabs').addEventListener('click',e=>{
-  const tab=e.target.closest('.cat-tab');if(!tab)return;
-  activeCat=tab.dataset.cat;
-  document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
-  tab.classList.add('active');render();
-});
-document.getElementById('search-input').addEventListener('input',e=>{searchTerm=e.target.value.trim();render();});
-document.getElementById('status-filter').addEventListener('change',e=>{activeStatus=e.target.value;render();});
-
-document.getElementById('stock-tbody').addEventListener('click',e=>{
-  const btn=e.target.closest('.qty-btn');if(!btn)return;
-  const it=items.find(x=>x.id===btn.dataset.id);if(!it)return;
-  if(btn.dataset.action==='inc')it.qty++;else if(it.qty>0)it.qty--;
-  saveItems();render();showToast(it.name+': '+it.qty,'success');
-});
-document.getElementById('stock-tbody').addEventListener('change',e=>{
-  if(!e.target.classList.contains('qty-num'))return;
-  const it=items.find(x=>x.id===e.target.dataset.id);if(!it)return;
-  const v=parseInt(e.target.value,10);
-  it.qty=isNaN(v)||v<0?0:v;
-  saveItems();render();showToast(it.name+': '+it.qty,'success');
+// ── UI Events ──────────────────────────────────────────────────────
+document.getElementById('cat-tabs').addEventListener('click', e => {
+  const tab = e.target.closest('.cat-tab');
+  if(!tab) return;
+  activeCat = tab.dataset.cat;
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  render();
 });
 
-document.getElementById('btn-reset').addEventListener('click',()=>{
-  if(!confirm('Reset ALL quantities to 10? This cannot be undone.'))return;
-  items.forEach(it=>it.qty=10);saveItems();render();showToast('All quantities reset to 10','warn');
-});
-document.getElementById('btn-print').addEventListener('click',()=>window.print());
-document.getElementById('btn-csv').addEventListener('click',()=>{
-  const list=filteredItems();
-  const rows=[['No.','Product / Material','Category','Qty','Status']];
-  list.forEach((it,i)=>rows.push([i+1,it.name,it.category,it.qty,statusLabel(getStatus(it.qty))]));
-  const csv=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n');
-  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download='RoyalEye_Stock_'+dateStamp()+'.csv';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
-  showToast('CSV downloaded!','success');
+document.getElementById('search-input').addEventListener('input', e => {
+  searchTerm = e.target.value.trim();
+  render();
 });
 
-let editingId=null;
-const modal=document.getElementById('modal');
-const fName=document.getElementById('f-name');
-const fCat=document.getElementById('f-cat');
-const fQty=document.getElementById('f-qty');
+document.getElementById('status-filter').addEventListener('change', e => {
+  activeStatus = e.target.value;
+  render();
+});
+
+// Quantity Plus / Minus Clicks
+document.getElementById('stock-tbody').addEventListener('click', e => {
+  const btn = e.target.closest('.qty-btn');
+  if(!btn) return;
+  const it = items.find(x => x.id === btn.dataset.id);
+  if(!it) return;
+
+  const current = parseInt(it.qty, 10) || 0;
+  const next = btn.dataset.action === 'inc' ? current + 1 : Math.max(0, current - 1);
+  updateItemQuantity(it.id, next, it.name);
+});
+
+// Direct Quantity Input Editing
+document.getElementById('stock-tbody').addEventListener('input', e => {
+  if(!e.target.classList.contains('qty-num')) return;
+  const it = items.find(x => x.id === e.target.dataset.id);
+  if(!it) return;
+  const val = parseInt(e.target.value, 10);
+  const next = isNaN(val) || val < 0 ? 0 : val;
+  updateItemQuantity(it.id, next, it.name);
+});
+
+// Reset All Quantities
+document.getElementById('btn-reset').addEventListener('click', async () => {
+  if(!confirm('Reset ALL quantities to 10 across all devices? This will update live for everyone.')) return;
+  items.forEach(it => it.qty = 10);
+  saveLocalCache();
+  render();
+  showToast('Resetting all quantities to 10...', 'warn');
+
+  if (sb) {
+    try {
+      const rows = items.map((it, idx) => ({
+        product_id: it.id,
+        name: it.name,
+        category: it.category,
+        brand: it.brand || 'Royal Eye',
+        daily_stock: 10,
+        sort_order: idx + 1
+      }));
+      await sb.from(TABLE_NAME).upsert(rows, { onConflict: 'product_id' });
+      showToast('All quantities live synced to 10!', 'success');
+    } catch(err) {
+      console.error("Reset error:", err);
+    }
+  }
+});
+
+document.getElementById('btn-print').addEventListener('click', () => window.print());
+
+document.getElementById('btn-csv').addEventListener('click', () => {
+  const list = filteredItems();
+  const rows = [['No.', 'Product / Material', 'Category', 'Qty', 'Status']];
+  list.forEach((it, i) => rows.push([i+1, it.name, it.category, it.qty, statusLabel(getStatus(it.qty))]));
+  const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g,'""') + '"').join(',')).join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'RoyalEye_Stock_' + dateStamp() + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('CSV downloaded successfully!', 'success');
+});
+
+// ── Modal Add Product ──────────────────────────────────────────────
+let editingId = null;
+const modal = document.getElementById('modal');
+const fName = document.getElementById('f-name');
+const fCat  = document.getElementById('f-cat');
+const fQty  = document.getElementById('f-qty');
 
 function openModal(id){
-  editingId=id||null;
+  editingId = id || null;
   if(id){
-    const it=items.find(x=>x.id===id);
-    document.getElementById('modal-title').textContent='Edit Product';
-    fName.value=it.name;fCat.value=it.category;fQty.value=it.qty;
+    const it = items.find(x => x.id === id);
+    document.getElementById('modal-title').textContent = 'Edit Product';
+    fName.value = it.name;
+    fCat.value  = it.category;
+    fQty.value  = it.qty;
   } else {
-    document.getElementById('modal-title').textContent='Add New Product';
-    fName.value='';fCat.value='Solar Panel';fQty.value=10;
+    document.getElementById('modal-title').textContent = 'Add New Product';
+    fName.value = '';
+    fCat.value  = 'Solar Panel';
+    fQty.value  = 10;
   }
-  modal.classList.add('open');setTimeout(()=>fName.focus(),60);
+  modal.classList.add('open');
+  setTimeout(() => fName.focus(), 60);
 }
-function closeModal(){modal.classList.remove('open');}
 
-document.getElementById('btn-add').addEventListener('click',()=>openModal(null));
-document.getElementById('modal-close').addEventListener('click',closeModal);
-document.getElementById('modal-cancel').addEventListener('click',closeModal);
-modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});
-document.getElementById('modal-save').addEventListener('click',()=>{
-  const name=fName.value.trim();
-  if(!name){fName.focus();showToast('Please enter a product / material name','warn');return;}
-  const qty=Math.max(0,parseInt(fQty.value,10)||0);
-  if(editingId){
-    const it=items.find(x=>x.id===editingId);it.name=name;it.category=fCat.value;it.qty=qty;
-    showToast('"'+name+'" updated','success');
-  }else{
-    const prefix=fCat.value.replace(/[^A-Za-z]/g,'').substring(0,3).toUpperCase();
-    items.unshift({id:prefix+'-'+String(Date.now()).slice(-5),name,category:fCat.value,qty});
-    showToast('"'+name+'" added','success');
+function closeModal(){ modal.classList.remove('open'); }
+
+document.getElementById('btn-add').addEventListener('click', () => openModal(null));
+document.getElementById('modal-close').addEventListener('click', closeModal);
+document.getElementById('modal-cancel').addEventListener('click', closeModal);
+modal.addEventListener('click', e => { if(e.target === modal) closeModal(); });
+
+document.getElementById('modal-save').addEventListener('click', async () => {
+  const name = fName.value.trim();
+  if(!name){
+    fName.focus();
+    showToast('Please enter a product / material name', 'warn');
+    return;
   }
-  saveItems();closeModal();render();
+  const qty = Math.max(0, parseInt(fQty.value, 10) || 0);
+  const category = fCat.value;
+
+  if (editingId) {
+    const it = items.find(x => x.id === editingId);
+    if (it) {
+      it.name = name;
+      it.category = category;
+      it.qty = qty;
+      saveLocalCache();
+      if (sb) {
+        await sb.from(TABLE_NAME).update({ name, category, daily_stock: qty }).eq('product_id', editingId);
+      }
+      showToast('"' + name + '" updated live!', 'success');
+    }
+  } else {
+    const prefix = category.replace(/[^A-Za-z]/g,'').substring(0,3).toUpperCase();
+    const newId = prefix + '-' + String(Date.now()).slice(-5);
+    const newItem = {
+      id: newId,
+      name,
+      category,
+      qty,
+      brand: 'Royal Eye',
+      sort_order: 0
+    };
+    items.unshift(newItem);
+    saveLocalCache();
+
+    if (sb) {
+      try {
+        await sb.from(TABLE_NAME).insert([{
+          product_id: newId,
+          name,
+          category,
+          brand: 'Royal Eye',
+          daily_stock: qty,
+          sort_order: 0
+        }]);
+      } catch(err) {
+        console.error("Insert error:", err);
+      }
+    }
+    showToast('"' + name + '" added & live synced to all devices!', 'success');
+  }
+
+  closeModal();
+  render();
 });
 
+// ── Toast Notifications ────────────────────────────────────────────
 let toastTimer;
-function showToast(msg,type){
-  const t=document.getElementById('toast');t.textContent=msg;t.className='show '+(type||'success');
-  clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.className='';},2500);
+function showToast(msg, type){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + (type || 'success');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, 2600);
 }
 
 function setHeroDate(){
-  const d=new Date();
-  document.getElementById('hero-date').textContent=d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const d = new Date();
+  document.getElementById('hero-date').textContent = d.toLocaleDateString('en-IN', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
 }
 
-loadItems();setHeroDate();render();
+// ── Heartbeat & Visibility Auto-Sync ───────────────────────────────
+// Keep all devices in continuous sync even if tab went to sleep
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    fetchFromSupabase().then(latest => {
+      if (latest && latest.length > 0) {
+        items = latest;
+        saveLocalCache();
+        render();
+      }
+    });
+  }
+});
+
+window.addEventListener('focus', () => {
+  fetchFromSupabase().then(latest => {
+    if (latest && latest.length > 0) {
+      items = latest;
+      saveLocalCache();
+      render();
+    }
+  });
+});
+
+// Periodic background resync (every 12 seconds)
+setInterval(async () => {
+  if (document.visibilityState === 'visible') {
+    const latest = await fetchFromSupabase();
+    if (latest && latest.length > 0) {
+      // Check if any quantity changed silently
+      let changed = false;
+      latest.forEach(r => {
+        const local = items.find(i => i.id === r.id);
+        if (local && local.qty !== r.qty) {
+          local.qty = r.qty;
+          changed = true;
+        }
+      });
+      if (changed) {
+        saveLocalCache();
+        render();
+      }
+    }
+  }
+}, 12000);
+
+// ── Initialize App ─────────────────────────────────────────────────
+setHeroDate();
+loadItems();
+setupRealtime();
 </script>
 </body>
 </html>
