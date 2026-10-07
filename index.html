@@ -35,7 +35,6 @@
     .pill-badge{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:99px;border:1px solid var(--border2);font-size:.75rem;font-weight:600;color:var(--txt2);background:var(--elevated);transition:all .3s ease}
     .pulse{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s ease-in-out infinite}
     .pulse.syncing{background:var(--gold);box-shadow:0 0 8px var(--gold)}
-    .pulse.offline{background:var(--crimson);box-shadow:0 0 8px var(--crimson);animation:none}
     @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}}
     
     .page-wrap{max-width:1100px;margin:0 auto;padding:28px 20px 60px}
@@ -309,7 +308,7 @@
 
   <footer class="app-footer">
     <span><strong>Royal Eye Solar Power</strong> &bull; Edamuttam, Thrissur, Kerala - 680568</span>
-    <span>📡 Live Cloud Database Synced &bull; v3.2</span>
+    <span>📡 Live Cloud Database Synced &bull; v3.3</span>
   </footer>
 </div>
 
@@ -475,15 +474,16 @@ function loadLocalCache() {
   return JSON.parse(JSON.stringify(DEFAULT_ITEMS));
 }
 
-// ── Native Cloud REST Fetch (Guaranteed 100% Reliability) ──────────
+// ── Native Cloud REST Fetch (Guaranteed 100% PostgREST Compatible) ─
 async function fetchCloudData() {
   try {
-    const url = `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?select=*&order=sort_order.asc&_ts=${Date.now()}`;
+    const url = `${SUPABASE_URL}/rest/v1/${TABLE_NAME}?select=*&order=sort_order.asc`;
     const res = await fetch(url, {
       method: 'GET',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+        'Cache-Control': 'no-cache'
       }
     });
 
@@ -581,7 +581,7 @@ function updateItemQuantity(id, newQty, productName) {
   // Queue update and push to Cloud immediately
   debouncedQtyChanges.set(id, it.qty);
   clearTimeout(syncDebounceTimer);
-  syncDebounceTimer = setTimeout(flushCloudUpdates, 80);
+  syncDebounceTimer = setTimeout(flushCloudUpdates, 50);
 }
 
 async function flushCloudUpdates() {
@@ -611,6 +611,10 @@ async function pollSync() {
     const remote = await fetchCloudData();
     if (!remote || remote.length === 0) return;
 
+    // Active input element protection: don't overwrite if user is actively typing in it
+    const activeEl = document.activeElement;
+    const activeId = (activeEl && activeEl.classList.contains('qty-num')) ? activeEl.dataset.id : null;
+
     // Check if new products were added or removed
     if (remote.length !== items.length) {
       items = remote;
@@ -621,6 +625,9 @@ async function pollSync() {
 
     let qtyChanged = false;
     remote.forEach(r => {
+      // If we currently have an un-flushed local change for this item, keep local
+      if (debouncedQtyChanges.has(r.id)) return;
+
       const local = items.find(i => i.id === r.id);
       if (local) {
         if (local.qty !== r.qty) {
@@ -630,7 +637,7 @@ async function pollSync() {
           const tr = document.querySelector(`tr[data-id="${r.id}"]`);
           if (tr) {
             const input = tr.querySelector('.qty-num');
-            if (input && document.activeElement !== input) input.value = r.qty;
+            if (input && r.id !== activeId) input.value = r.qty;
             const statusTd = tr.querySelector('.td-status');
             if (statusTd) {
               const s = getStatus(r.qty);
@@ -643,11 +650,6 @@ async function pollSync() {
         }
         if (r.name && local.name !== r.name) local.name = r.name;
         if (r.category && local.category !== r.category) local.category = r.category;
-      } else {
-        // Missing item found
-        items = remote;
-        qtyChanged = true;
-        render();
       }
     });
 
@@ -900,7 +902,6 @@ document.getElementById('modal-save').addEventListener('click', async () => {
           sort_order: 0
         }])
       });
-      // Trigger instant poll sync
       pollSync();
     } catch(err) {
       console.error("Insert error:", err);
