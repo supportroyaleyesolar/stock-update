@@ -141,6 +141,101 @@
     .qty-num{width:54px;height:28px;text-align:center;background:var(--surface);border:1px solid var(--border2);border-left:none;border-right:none;color:var(--txt1);font-family:'Rajdhani',sans-serif;font-size:.95rem;font-weight:700;outline:none;transition:var(--tr)}
     .qty-num:focus{background:var(--elevated);border-color:var(--gold)}
 
+    .td-actions{width:115px;text-align:center}
+    .action-group{display:inline-flex;align-items:center;gap:6px;justify-content:center}
+    .action-btn{
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      padding:5px 9px;
+      border-radius:6px;
+      border:1px solid var(--border2);
+      background:var(--elevated);
+      color:var(--txt2);
+      font-family:'Inter',sans-serif;
+      font-size:.74rem;
+      font-weight:600;
+      cursor:pointer;
+      transition:var(--tr);
+      user-select:none;
+      line-height:1;
+    }
+    .action-btn svg{flex-shrink:0}
+    .action-btn:hover{
+      background:var(--gold-soft);
+      border-color:rgba(201,162,39,.5);
+      color:var(--gold);
+      transform:translateY(-1px);
+    }
+    .action-btn.btn-del{
+      padding:5px 7px;
+      color:var(--txt3);
+    }
+    .action-btn.btn-del:hover{
+      background:rgba(255,51,75,.12);
+      border-color:rgba(255,51,75,.35);
+      color:var(--crimson);
+    }
+
+    .item-name-text{
+      font-size:.88rem;
+      font-weight:600;
+      color:var(--txt1);
+      cursor:pointer;
+      transition:var(--tr);
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .item-name-text:hover{
+      color:var(--gold);
+    }
+    .item-name-text .edit-hint-icon{
+      opacity:0;
+      font-size:.75rem;
+      transition:opacity .15s ease;
+    }
+    tr:hover .item-name-text .edit-hint-icon{
+      opacity:.75;
+    }
+
+    .btn-del-modal{
+      padding:8px 14px;
+      border-radius:8px;
+      border:1px solid rgba(255,51,75,.35);
+      background:rgba(255,51,75,.1);
+      color:var(--crimson);
+      cursor:pointer;
+      font-family:'Inter',sans-serif;
+      font-size:.82rem;
+      font-weight:600;
+      transition:var(--tr);
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      margin-right:auto;
+    }
+    .btn-del-modal:hover{
+      background:rgba(255,51,75,.2);
+      border-color:var(--crimson);
+    }
+
+    .item-id-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 10px;
+      border-radius:6px;
+      background:var(--surface);
+      border:1px solid var(--border);
+      font-family:'Rajdhani',sans-serif;
+      font-size:.82rem;
+      color:var(--txt3);
+      font-weight:600;
+      letter-spacing:.5px;
+    }
+    .item-id-pill strong{color:var(--gold)}
+
     .empty-state{padding:60px 20px;text-align:center;display:none}
     .empty-state svg{color:var(--txt3);margin-bottom:14px}
     .empty-state h3{font-size:1rem;color:var(--txt2);margin-bottom:6px}
@@ -400,6 +495,16 @@
       color:var(--gold);
       border:1px solid rgba(201,162,39,.3);
     }
+    .act-badge.edt{
+      background:rgba(201,162,39,.14);
+      color:var(--gold);
+      border:1px solid rgba(201,162,39,.35);
+    }
+    .act-badge.del{
+      background:rgba(255,51,75,.14);
+      color:var(--crimson);
+      border:1px solid rgba(255,51,75,.35);
+    }
     .act-sync-tag{
       font-size:.64rem;
       font-weight:600;
@@ -542,7 +647,7 @@
       .table-wrap{border-radius:10px;overflow:hidden}
       .stock-table thead{display:none}
       .stock-table,.stock-table tbody,.stock-table tr,.stock-table td{display:block;width:100%}
-      .stock-table tbody tr{padding:12px 14px;border-bottom:1px solid var(--border2);display:grid;grid-template-columns:1fr auto;grid-template-areas:"name cat" "status qty";align-items:center;gap:10px 8px;background:var(--card)}
+      .stock-table tbody tr{padding:12px 14px;border-bottom:1px solid var(--border2);display:grid;grid-template-columns:1fr auto;grid-template-areas:"name cat" "status qty" "actions actions";align-items:center;gap:10px 8px;background:var(--card)}
       .stock-table td{padding:0;border:none}
       .stock-table td.td-sl{display:none!important}
       .td-sl{display:none!important}
@@ -553,6 +658,7 @@
       .td-cat{grid-area:cat;text-align:right}
       .td-status{grid-area:status;text-align:left!important}
       .td-qty{grid-area:qty;text-align:right!important}
+      .td-actions{grid-area:actions;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding-top:8px!important;border-top:1px dashed var(--border)!important;width:100%!important}
       .qty-wrap{justify-content:flex-end}
       .qty-btn{width:34px;height:32px;font-size:1.1rem}
       .qty-num{width:48px;height:32px;font-size:1rem}
@@ -561,7 +667,7 @@
     }
     @media print{
       body{background:#fff;color:#000}
-      .top-header,.toolbar,.cat-tabs,.btn-tool,.qty-btn,.export-link,.modal-backdrop,#toast,.activity-sidebar,.floating-side-tab{display:none!important}
+      .top-header,.toolbar,.cat-tabs,.btn-tool,.qty-btn,.export-link,.modal-backdrop,#toast,.activity-sidebar,.floating-side-tab,.td-actions,.action-btn,.btn-del-modal{display:none!important}
       .table-wrap{border:1px solid #ccc;border-radius:0}
       .stock-table thead tr{background:#f5f5f5}
       .stock-table th,.stock-table td{color:#000;border-color:#ddd}
@@ -690,6 +796,7 @@
               <th>Category</th>
               <th class="center">Status</th>
               <th class="center">Quantity</th>
+              <th class="center">Actions</th>
             </tr>
           </thead>
           <tbody id="stock-tbody"></tbody>
@@ -763,6 +870,11 @@
       </button>
     </div>
     <div class="modal-body">
+      <div class="form-row full" id="f-id-row" style="display:none;margin-bottom:10px;">
+        <div>
+          <div class="item-id-pill">Product ID: <strong id="f-id-val"></strong></div>
+        </div>
+      </div>
       <div class="form-row full">
         <div>
           <label class="form-label" for="f-name">Product / Material Name *</label>
@@ -783,12 +895,16 @@
           </select>
         </div>
         <div>
-          <label class="form-label" for="f-qty">Initial Quantity</label>
+          <label class="form-label" for="f-qty" id="f-qty-label">Quantity</label>
           <input class="form-input" id="f-qty" type="number" min="0" value="10" />
         </div>
       </div>
     </div>
     <div class="modal-ftr">
+      <button class="btn-del-modal" id="modal-delete" type="button" style="display:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        Delete Product
+      </button>
       <button class="btn-cancel" id="modal-cancel">Cancel</button>
       <button class="btn-save" id="modal-save">Save Product</button>
     </div>
@@ -1022,6 +1138,10 @@ function renderStockLogs() {
       badgeHtml = `<span class="act-badge rst">&orarr; Reset all to 10</span>`;
     } else if (log.action === 'add') {
       badgeHtml = `<span class="act-badge add">+ Added Product (${log.newQty})</span>`;
+    } else if (log.action === 'edit') {
+      badgeHtml = `<span class="act-badge edt">✏️ ${escHtml(log.desc || 'Edited Details')}</span>`;
+    } else if (log.action === 'delete') {
+      badgeHtml = `<span class="act-badge del">🗑️ Removed Product</span>`;
     } else {
       badgeHtml = `<span class="act-badge set">&bull; Set to ${log.newQty} (was ${log.oldQty})</span>`;
     }
@@ -1222,6 +1342,38 @@ function initRealtime() {
             const data = payload.payload;
             addStockChangeLog(data, false);
 
+            if (data.action === 'delete') {
+              items = items.filter(x => x.id !== data.productId);
+              saveLocalCache();
+              render();
+              return;
+            }
+
+            if (data.action === 'add') {
+              if (!items.some(x => x.id === data.productId)) {
+                items.unshift({
+                  id: data.productId,
+                  name: data.productName,
+                  category: data.category || 'Solar Panel',
+                  qty: typeof data.newQty === 'number' ? data.newQty : 10,
+                  brand: 'Royal Eye',
+                  sort_order: 0
+                });
+                saveLocalCache();
+                render();
+              }
+              return;
+            }
+
+            const local = items.find(x => x.id === data.productId);
+            if (local) {
+              if (data.productName && local.name !== data.productName) local.name = data.productName;
+              if (data.category && local.category !== data.category) local.category = data.category;
+              if (typeof data.newQty === 'number') local.qty = data.newQty;
+              saveLocalCache();
+              render();
+            }
+
             // Flash updated row
             const tr = document.querySelector(`tr[data-id="${data.productId}"]`);
             if (tr) {
@@ -1385,14 +1537,21 @@ async function pollSync() {
             tr.classList.add('row-live-flash');
           }
         }
-        if (r.name && local.name !== r.name) local.name = r.name;
-        if (r.category && local.category !== r.category) local.category = r.category;
+        if (r.name && local.name !== r.name) {
+          local.name = r.name;
+          hasChanged = true;
+        }
+        if (r.category && local.category !== r.category) {
+          local.category = r.category;
+          hasChanged = true;
+        }
       }
     });
 
-    if (qtyChanged) {
+    if (hasChanged || qtyChanged) {
       saveLocalCache();
       updateKPIs();
+      render();
     }
   } catch(e){}
 }
@@ -1437,7 +1596,10 @@ function render(){
       '<td class="td-name">' +
         '<div class="name-wrap">' +
           '<span class="sl-badge-m">' + (i+1) + '</span>' +
-          '<span class="item-name-text">' + escHtml(it.name) + '</span>' +
+          '<span class="item-name-text" data-action="edit" data-id="' + it.id + '" title="Click to edit ' + escHtml(it.name) + '">' +
+            escHtml(it.name) +
+            '<span class="edit-hint-icon">✏️</span>' +
+          '</span>' +
         '</div>' +
       '</td>' +
       '<td class="td-cat"><span class="cat-badge ' + catClass(it.category) + '">' + escHtml(it.category) + '</span></td>' +
@@ -1447,6 +1609,17 @@ function render(){
         '<input class="qty-num" type="number" min="0" value="' + it.qty + '" data-id="' + it.id + '" />' +
         '<button class="qty-btn" data-action="inc" data-id="' + it.id + '" title="Increase">+</button>' +
       '</div></td>' +
+      '<td class="td-actions center">' +
+        '<div class="action-group">' +
+          '<button class="action-btn" data-action="edit" data-id="' + it.id + '" title="Edit product details">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>' +
+            '<span>Edit</span>' +
+          '</button>' +
+          '<button class="action-btn btn-del" data-action="delete" data-id="' + it.id + '" title="Delete product">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>' +
+          '</button>' +
+        '</div>' +
+      '</td>' +
     '</tr>';
   }).join('');
 
@@ -1480,16 +1653,31 @@ document.getElementById('status-filter').addEventListener('change', e => {
   render();
 });
 
-// Quantity Plus / Minus Clicks
+// Table Row Clicks (Edit, Delete, and Quantity)
 document.getElementById('stock-tbody').addEventListener('click', e => {
-  const btn = e.target.closest('.qty-btn');
-  if(!btn) return;
-  const it = items.find(x => x.id === btn.dataset.id);
-  if(!it) return;
+  const editEl = e.target.closest('[data-action="edit"]');
+  if (editEl) {
+    const id = editEl.dataset.id;
+    if (id) openModal(id);
+    return;
+  }
 
-  const current = parseInt(it.qty, 10) || 0;
-  const next = btn.dataset.action === 'inc' ? current + 1 : Math.max(0, current - 1);
-  updateItemQuantity(it.id, next, it.name);
+  const delEl = e.target.closest('[data-action="delete"]');
+  if (delEl) {
+    const id = delEl.dataset.id;
+    if (id) handleDeleteProduct(id);
+    return;
+  }
+
+  const btn = e.target.closest('.qty-btn');
+  if (btn) {
+    const it = items.find(x => x.id === btn.dataset.id);
+    if (!it) return;
+    const current = parseInt(it.qty, 10) || 0;
+    const next = btn.dataset.action === 'inc' ? current + 1 : Math.max(0, current - 1);
+    updateItemQuantity(it.id, next, it.name);
+    return;
+  }
 });
 
 // Direct Quantity Input Editing
@@ -1565,7 +1753,7 @@ document.getElementById('btn-csv').addEventListener('click', () => {
   showToast('CSV downloaded successfully!', 'success');
 });
 
-// ── Modal Add Product ────────────────────────────────────────────────
+// ── Modal Add / Edit Product ─────────────────────────────────────────
 let editingId = null;
 const modal = document.getElementById('modal');
 const fName = document.getElementById('f-name');
@@ -1574,23 +1762,92 @@ const fQty  = document.getElementById('f-qty');
 
 function openModal(id){
   editingId = id || null;
+  const idRow = document.getElementById('f-id-row');
+  const idVal = document.getElementById('f-id-val');
+  const delBtn = document.getElementById('modal-delete');
+  const qtyLabel = document.getElementById('f-qty-label');
+  const saveBtn = document.getElementById('modal-save');
+
   if(id){
     const it = items.find(x => x.id === id);
-    document.getElementById('modal-title').textContent = 'Edit Product';
+    if (!it) return;
+    document.getElementById('modal-title').innerHTML = '<span>✏️</span> Edit Product Details';
     fName.value = it.name;
     fCat.value  = it.category;
     fQty.value  = it.qty;
+    if (idRow) idRow.style.display = 'block';
+    if (idVal) idVal.textContent = it.id;
+    if (delBtn) delBtn.style.display = 'inline-flex';
+    if (qtyLabel) qtyLabel.textContent = 'Current Quantity';
+    if (saveBtn) saveBtn.textContent = 'Save Changes';
   } else {
-    document.getElementById('modal-title').textContent = 'Add New Product';
+    document.getElementById('modal-title').innerHTML = '<span>➕</span> Add New Product';
     fName.value = '';
-    fCat.value  = 'Solar Panel';
+    fCat.value  = activeCat !== 'all' ? activeCat : 'Solar Panel';
     fQty.value  = 10;
+    if (idRow) idRow.style.display = 'none';
+    if (delBtn) delBtn.style.display = 'none';
+    if (qtyLabel) qtyLabel.textContent = 'Initial Quantity';
+    if (saveBtn) saveBtn.textContent = 'Save Product';
   }
   modal.classList.add('open');
   setTimeout(() => fName.focus(), 60);
 }
 
 function closeModal(){ modal.classList.remove('open'); }
+
+async function handleDeleteProduct(id) {
+  const it = items.find(x => x.id === id);
+  if (!it) return;
+  if (!confirm(`Are you sure you want to delete "${it.name}" (${it.id}) from the stock register?\nThis will remove it live on all connected devices.`)) return;
+
+  const prodName = it.name;
+  items = items.filter(x => x.id !== id);
+  saveLocalCache();
+  render();
+
+  addStockChangeLog({
+    user: currentUser.displayName,
+    username: currentUser.username,
+    action: 'delete',
+    productId: id,
+    productName: prodName,
+    oldQty: it.qty,
+    newQty: 0,
+    time: new Date().toISOString()
+  }, true);
+
+  broadcastStockChange({
+    user: currentUser.displayName,
+    username: currentUser.username,
+    action: 'delete',
+    productId: id,
+    productName: prodName,
+    time: new Date().toISOString()
+  });
+
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}?product_id=eq.${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: REST_HEADERS
+    });
+  } catch(err) {
+    console.warn("Delete error:", err);
+  }
+
+  showToast(`🗑️ "${prodName}" removed live from register`, 'info');
+}
+
+const modalDeleteBtn = document.getElementById('modal-delete');
+if (modalDeleteBtn) {
+  modalDeleteBtn.addEventListener('click', () => {
+    if (editingId) {
+      const idToDelete = editingId;
+      closeModal();
+      handleDeleteProduct(idToDelete);
+    }
+  });
+}
 
 document.getElementById('btn-add').addEventListener('click', () => openModal(null));
 document.getElementById('modal-close').addEventListener('click', closeModal);
@@ -1606,91 +1863,148 @@ document.getElementById('modal-save').addEventListener('click', async () => {
   }
   const qty = Math.max(0, parseInt(fQty.value, 10) || 0);
   const category = fCat.value;
+  const saveBtn = document.getElementById('modal-save');
+  const originalSaveText = saveBtn.textContent;
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving...';
 
-  if (editingId) {
-    const it = items.find(x => x.id === editingId);
-    if (it) {
-      const oldQty = it.qty;
-      it.name = name;
-      it.category = category;
-      it.qty = qty;
+  try {
+    if (editingId) {
+      const it = items.find(x => x.id === editingId);
+      if (it) {
+        const oldQty = it.qty;
+        const oldName = it.name;
+        const oldCat = it.category;
+
+        it.name = name;
+        it.category = category;
+        it.qty = qty;
+        saveLocalCache();
+        render();
+
+        const tr = document.querySelector(`tr[data-id="${editingId}"]`);
+        if (tr) {
+          tr.classList.remove('row-live-flash');
+          void tr.offsetWidth;
+          tr.classList.add('row-live-flash');
+        }
+
+        let changesDesc = [];
+        if (oldName !== name) changesDesc.push(`renamed to "${name}"`);
+        if (oldCat !== category) changesDesc.push(`category: ${category}`);
+        if (oldQty !== qty) changesDesc.push(`qty: ${oldQty} → ${qty}`);
+        const descText = changesDesc.length > 0 ? changesDesc.join(', ') : 'details updated';
+
+        addStockChangeLog({
+          user: currentUser.displayName,
+          username: currentUser.username,
+          action: 'edit',
+          productId: editingId,
+          productName: name,
+          category: category,
+          oldName: oldName,
+          oldCat: oldCat,
+          oldQty: oldQty,
+          newQty: qty,
+          desc: descText,
+          time: new Date().toISOString()
+        }, true);
+
+        broadcastStockChange({
+          user: currentUser.displayName,
+          username: currentUser.username,
+          action: 'edit',
+          productId: editingId,
+          productName: name,
+          category: category,
+          newQty: qty,
+          desc: descText,
+          time: new Date().toISOString()
+        });
+
+        try {
+          await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}?product_id=eq.${encodeURIComponent(editingId)}`, {
+            method: 'PATCH',
+            headers: REST_HEADERS,
+            body: JSON.stringify({ 
+              name, 
+              category, 
+              daily_stock: qty, 
+              verified_date: `${currentUser.displayName} (${qty})`,
+              updated_at: new Date().toISOString()
+            })
+          });
+        } catch(e){
+          console.warn('Cloud patch error:', e);
+        }
+
+        showToast('✓ "' + name + '" updated & live synced!', 'success');
+      }
+    } else {
+      const prefix = category.replace(/[^A-Za-z]/g,'').substring(0,3).toUpperCase();
+      const newId = prefix + '-' + String(Date.now()).slice(-5);
+      const newItem = {
+        id: newId,
+        name,
+        category,
+        qty,
+        brand: 'Royal Eye',
+        sort_order: 0
+      };
+      items.unshift(newItem);
       saveLocalCache();
+      render();
 
       addStockChangeLog({
         user: currentUser.displayName,
         username: currentUser.username,
-        action: 'set',
-        productId: editingId,
+        action: 'add',
+        productId: newId,
         productName: name,
-        oldQty: oldQty,
+        category: category,
+        oldQty: 0,
         newQty: qty,
-        diff: qty - oldQty,
+        diff: qty,
         time: new Date().toISOString()
       }, true);
 
-      try {
-        await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}?product_id=eq.${encodeURIComponent(editingId)}`, {
-          method: 'PATCH',
-          headers: REST_HEADERS,
-          body: JSON.stringify({ 
-            name, 
-            category, 
-            daily_stock: qty,
-            verified_date: `${currentUser.displayName} (${qty})`
-          })
-        });
-      } catch(e){}
-      showToast('"' + name + '" updated live!', 'success');
-    }
-  } else {
-    const prefix = category.replace(/[^A-Za-z]/g,'').substring(0,3).toUpperCase();
-    const newId = prefix + '-' + String(Date.now()).slice(-5);
-    const newItem = {
-      id: newId,
-      name,
-      category,
-      qty,
-      brand: 'Royal Eye',
-      sort_order: 0
-    };
-    items.unshift(newItem);
-    saveLocalCache();
-
-    addStockChangeLog({
-      user: currentUser.displayName,
-      username: currentUser.username,
-      action: 'add',
-      productId: newId,
-      productName: name,
-      oldQty: 0,
-      newQty: qty,
-      diff: qty,
-      time: new Date().toISOString()
-    }, true);
-
-    try {
-      await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}`, {
-        method: 'POST',
-        headers: REST_HEADERS,
-        body: JSON.stringify([{
-          product_id: newId,
-          name,
-          category,
-          brand: 'Royal Eye',
-          daily_stock: qty,
-          verified_date: `${currentUser.displayName} (${qty})`,
-          sort_order: 0
-        }])
+      broadcastStockChange({
+        user: currentUser.displayName,
+        username: currentUser.username,
+        action: 'add',
+        productId: newId,
+        productName: name,
+        category: category,
+        newQty: qty,
+        time: new Date().toISOString()
       });
-      pollSync();
-    } catch(err) {
-      console.error("Insert error:", err);
-    }
-    showToast('"' + name + '" added & live synced to all devices!', 'success');
-  }
 
-  closeModal();
-  render();
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}`, {
+          method: 'POST',
+          headers: REST_HEADERS,
+          body: JSON.stringify([{
+            product_id: newId,
+            name,
+            category,
+            brand: 'Royal Eye',
+            daily_stock: qty,
+            verified_date: `${currentUser.displayName} (${qty})`,
+            sort_order: 0
+          }])
+        });
+        pollSync();
+      } catch(err) {
+        console.error("Insert error:", err);
+      }
+      showToast('✓ "' + name + '" added & live synced!', 'success');
+    }
+
+    closeModal();
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = originalSaveText;
+  }
 });
 
 // ── Toast Notifications ──────────────────────────────────────────────
