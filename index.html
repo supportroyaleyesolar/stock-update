@@ -332,14 +332,44 @@
     }
 
     .activity-filter-bar{
-      padding:8px 16px;
+      padding:8px 14px;
       background:rgba(0,0,0,.25);
       border-bottom:1px solid var(--border);
       display:flex;
       align-items:center;
       justify-content:space-between;
+      gap:8px;
       font-size:.7rem;
       color:var(--txt3);
+    }
+    .activity-bar-actions{
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .activity-print-btn{
+      background:var(--gold-soft);
+      border:1px solid rgba(201,162,39,.35);
+      color:var(--gold);
+      font-size:.7rem;
+      font-weight:600;
+      cursor:pointer;
+      transition:var(--tr);
+      padding:2px 8px;
+      border-radius:4px;
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      line-height:1.2;
+    }
+    .activity-print-btn svg{
+      color:var(--gold);
+      flex-shrink:0;
+    }
+    .activity-print-btn:hover{
+      background:rgba(201,162,39,.25);
+      border-color:var(--gold);
+      color:#fff;
     }
     .activity-clear-btn{
       background:none;
@@ -864,8 +894,14 @@
       </div>
 
       <div class="activity-filter-bar">
-        <span>Updates by staff members</span>
-        <button class="activity-clear-btn" id="activity-clear-btn">Clear History</button>
+        <span>Updates by staff</span>
+        <div class="activity-bar-actions">
+          <button class="activity-print-btn" id="activity-print-btn" title="Print Stock Changes Report">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            Print
+          </button>
+          <button class="activity-clear-btn" id="activity-clear-btn" title="Clear History Log">Clear</button>
+        </div>
       </div>
 
       <div class="activity-list" id="activity-list">
@@ -1240,12 +1276,198 @@ setInterval(() => {
   if (stockLogs.length > 0) renderStockLogs();
 }, 15000);
 
-// Clear Activity History button
+// Print Activity Changes History Report
+function printStockHistory() {
+  if (!stockLogs || stockLogs.length === 0) {
+    showToast('No changes history to print.', 'info');
+    return;
+  }
+
+  const printFrame = document.createElement('iframe');
+  printFrame.style.position = 'fixed';
+  printFrame.style.right = '0';
+  printFrame.style.bottom = '0';
+  printFrame.style.width = '0';
+  printFrame.style.height = '0';
+  printFrame.style.border = '0';
+  document.body.appendChild(printFrame);
+
+  const now = new Date();
+  const printTimeStr = now.toLocaleDateString('en-IN', {
+    weekday: 'short', day: '2-digit', month: 'short', year: 'numeric'
+  }) + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  const rowsHtml = stockLogs.map((log, idx) => {
+    const meta = getUserMeta(log.username || log.user);
+    const dt = formatLogDateTime(log.time);
+
+    let badgeClass = 'badge-set';
+    let actionLabel = 'Set Qty';
+    let detailText = `${log.oldQty !== undefined ? log.oldQty : '-'} → ${log.newQty !== undefined ? log.newQty : '-'}`;
+
+    if (log.action === 'increase') {
+      badgeClass = 'badge-inc';
+      actionLabel = `+ Increase (+${log.diff || 1})`;
+      detailText = `${log.oldQty} → ${log.newQty}`;
+    } else if (log.action === 'decrease') {
+      badgeClass = 'badge-dec';
+      actionLabel = `- Decrease (${log.diff || -1})`;
+      detailText = `${log.oldQty} → ${log.newQty}`;
+    } else if (log.action === 'reset') {
+      badgeClass = 'badge-rst';
+      actionLabel = 'Reset All';
+      detailText = 'All items reset to 10';
+    } else if (log.action === 'add') {
+      badgeClass = 'badge-add';
+      actionLabel = '+ Add Product';
+      detailText = `Initial stock: ${log.newQty}`;
+    } else if (log.action === 'edit') {
+      badgeClass = 'badge-edt';
+      actionLabel = 'Edit Details';
+      detailText = log.desc || 'Product updated';
+    } else if (log.action === 'delete') {
+      badgeClass = 'badge-del';
+      actionLabel = 'Delete Product';
+      detailText = 'Removed from catalog';
+    }
+
+    return `
+      <tr>
+        <td class="center">${idx + 1}</td>
+        <td><strong>${dt.shortDate || dt.date}</strong><br><span style="color:#666;font-size:9px;">${dt.time}</span></td>
+        <td><strong>${escHtml(log.user || meta.displayName)}</strong><br><span style="color:#666;font-size:9px;">${meta.role || 'Staff'}</span></td>
+        <td><strong>${escHtml(log.productName || log.productId)}</strong><br><span style="color:#666;font-size:9px;">ID: ${escHtml(log.productId || '-')}</span></td>
+        <td class="center"><span class="badge ${badgeClass}">${actionLabel}</span></td>
+        <td>${escHtml(detailText)}</td>
+        <td class="center"><strong>${log.newQty !== undefined ? log.newQty : '-'}</strong></td>
+      </tr>
+    `;
+  }).join('');
+
+  const reportHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Royal Eye Solar Power - Stock Changes History</title>
+  <style>
+    @page { size: A4 portrait; margin: 12mm 10mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; color: #111; background: #fff; font-size: 10.5px; line-height: 1.35; padding: 10px; }
+    .report-header { border-bottom: 2px solid #c9a227; padding-bottom: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-start; }
+    .company-title { font-size: 17px; font-weight: 800; color: #111; }
+    .company-title span { color: #c9a227; }
+    .company-sub { font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-top: 1px; }
+    .meta-box { text-align: right; font-size: 9.5px; color: #444; }
+    .report-title-bar { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 6px 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .report-title { font-size: 12px; font-weight: 700; color: #222; }
+    .count-pill { background: #c9a227; color: #000; font-weight: 800; font-size: 9.5px; border-radius: 99px; padding: 1px 8px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+    th { background: #f1f3f5; border: 1px solid #ced4da; padding: 6px 7px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+    th.center, td.center { text-align: center; }
+    td { border: 1px solid #dee2e6; padding: 5px 7px; font-size: 9.5px; vertical-align: middle; }
+    tr:nth-child(even) { background: #fbfbfb; }
+    .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 8.5px; font-weight: 700; white-space: nowrap; }
+    .badge-inc { background: #e6fcf5; color: #0ca678; border: 1px solid #b2f2bb; }
+    .badge-dec { background: #fff5f5; color: #fa5252; border: 1px solid #ffc9c9; }
+    .badge-edt { background: #fff9db; color: #f59f00; border: 1px solid #ffe066; }
+    .badge-add { background: #e7f5ff; color: #1c7ed6; border: 1px solid #a5d8ff; }
+    .badge-del { background: #ffe3e3; color: #e03131; border: 1px solid #ffa8a8; }
+    .badge-rst { background: #f3f0ff; color: #7950f2; border: 1px solid #d0bfff; }
+    .badge-set { background: #f8f9fa; color: #495057; border: 1px solid #ced4da; }
+    .footer-signatures { margin-top: 24px; display: flex; justify-content: space-between; padding-top: 10px; border-top: 1px solid #ddd; font-size: 9.5px; color: #555; }
+  </style>
+</head>
+<body>
+  <div class="report-header">
+    <div>
+      <div class="company-title">ROYAL EYE <span>SOLAR POWER</span></div>
+      <div class="company-sub">Material Stock Register &bull; Audit Trail</div>
+      <div style="font-size:9px;color:#777;margin-top:2px;">Edamuttam, Thrissur, Kerala - 680568</div>
+    </div>
+    <div class="meta-box">
+      <div><strong>Printed On:</strong> ${printTimeStr}</div>
+      <div><strong>Printed By:</strong> ${escHtml(currentUser ? currentUser.displayName : 'Staff')}</div>
+      <div><strong>Audit Records:</strong> ${stockLogs.length} changes</div>
+    </div>
+  </div>
+
+  <div class="report-title-bar">
+    <div class="report-title">STOCK CHANGES &amp; ACTIVITY AUDIT HISTORY REPORT</div>
+    <span class="count-pill">${stockLogs.length} Records</span>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="center" style="width:28px;">No.</th>
+        <th style="width:90px;">Date &amp; Time</th>
+        <th style="width:85px;">Staff Member</th>
+        <th>Product / Material</th>
+        <th class="center" style="width:105px;">Change Type</th>
+        <th>Change Details</th>
+        <th class="center" style="width:48px;">New Qty</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rowsHtml}
+    </tbody>
+  </table>
+
+  <div class="footer-signatures">
+    <div>Royal Eye Solar Power Stock System &bull; Confidential Internal Record</div>
+    <div>Verified By Store Admin: _______________________ &nbsp; Date: ____________</div>
+  </div>
+</body>
+</html>`;
+
+  const doc = printFrame.contentWindow.document;
+  doc.open();
+  doc.write(reportHtml);
+  doc.close();
+
+  setTimeout(() => {
+    printFrame.contentWindow.focus();
+    printFrame.contentWindow.print();
+    setTimeout(() => {
+      try { document.body.removeChild(printFrame); } catch(e){}
+    }, 1500);
+  }, 350);
+}
+
+// Print History button
+const actPrintBtn = document.getElementById('activity-print-btn');
+if (actPrintBtn) {
+  actPrintBtn.addEventListener('click', printStockHistory);
+}
+
+// Clear Activity History button (offers print first)
 document.getElementById('activity-clear-btn').addEventListener('click', () => {
-  if (confirm('Clear local activity log history?')) {
-    stockLogs = [];
-    saveStockLogs();
-    renderStockLogs();
+  if (!stockLogs || stockLogs.length === 0) {
+    showToast('Activity history is already empty.', 'info');
+    return;
+  }
+
+  const wantPrint = confirm(
+    `Changes History contains ${stockLogs.length} record(s).\n\nWould you like to PRINT the report before deleting?\n\n• Click OK to PRINT first.\n• Click CANCEL to proceed to delete directly.`
+  );
+
+  if (wantPrint) {
+    printStockHistory();
+    setTimeout(() => {
+      if (confirm('Did you finish printing? Do you now want to CLEAR the changes history?')) {
+        stockLogs = [];
+        saveStockLogs();
+        renderStockLogs();
+        showToast('Changes history cleared.', 'info');
+      }
+    }, 800);
+  } else {
+    if (confirm(`Permanently clear all ${stockLogs.length} change history records?`)) {
+      stockLogs = [];
+      saveStockLogs();
+      renderStockLogs();
+      showToast('Changes history cleared.', 'info');
+    }
   }
 });
 
