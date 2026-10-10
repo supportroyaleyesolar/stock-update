@@ -244,6 +244,28 @@
     /* ═════════════════════════════════════════════════════════════════
        RIGHT SIDE WEBPAGE TAB - LIVE STOCK CHANGES PANEL
        ═════════════════════════════════════════════════════════════════ */
+    body:not(.is-admin) .activity-sidebar,
+    body:not(.is-admin) .floating-side-tab,
+    body:not(.is-admin) #btn-header-activity {
+      display: none !important;
+      pointer-events: none !important;
+    }
+
+    .act-sync-tag.live{
+      color:var(--green);
+      background:rgba(0,230,118,.14);
+      border:1px solid rgba(0,230,118,.35);
+      padding:2px 7px;
+      border-radius:99px;
+    }
+    .act-sync-tag.offline{
+      color:var(--gold);
+      background:rgba(201,162,39,.14);
+      border:1px solid rgba(201,162,39,.35);
+      padding:2px 7px;
+      border-radius:99px;
+    }
+
     .activity-sidebar{
       width:340px;
       min-width:340px;
@@ -781,8 +803,8 @@
     <main class="content-col">
       <div class="page-hero">
         <div>
-          <h1>Material <span>Stock Register</span></h1>
-          <p>Real-time live multi-device inventory for Solar Panels, Inverters, Lithium Batteries, Combos &amp; Installation Kits.</p>
+          <h1 id="hero-heading">Material <span>Stock Register</span></h1>
+          <p id="hero-subtext">Real-time live multi-device inventory for Solar Panels, Inverters, Lithium Batteries, Combos &amp; Installation Kits.</p>
         </div>
         <div class="hero-date" id="hero-date"></div>
       </div>
@@ -1046,19 +1068,27 @@ function initUserHeader() {
     avatarEl.style.backgroundColor = adminUser ? '#ff1e27' : meta.color;
   }
 
-  // Permission Check: ONLY Krishnanunni (Administrator) can see the Changes tab
+  // Permission Check: ONLY Krishnanunni (Administrator) can see the Live Stock Changes panel
+  document.body.classList.toggle('is-admin', adminUser);
+
   const headerActBtn = document.getElementById('btn-header-activity');
   const floatBtn = document.getElementById('floating-side-tab');
   const sidebarEl = document.getElementById('activity-sidebar');
+  const headingEl = document.getElementById('hero-heading');
+  const subtextEl = document.getElementById('hero-subtext');
 
   if (!adminUser) {
     if (headerActBtn) headerActBtn.style.display = 'none';
     if (floatBtn) floatBtn.style.display = 'none';
     if (sidebarEl) sidebarEl.style.display = 'none';
+    if (headingEl) headingEl.innerHTML = 'Material <span>Stock Register</span>';
+    if (subtextEl) subtextEl.textContent = 'Real-time live multi-device inventory for Solar Panels, Inverters, Lithium Batteries, Combos & Installation Kits.';
   } else {
     if (headerActBtn) headerActBtn.style.display = 'flex';
     if (floatBtn) floatBtn.style.display = 'flex';
     if (sidebarEl) sidebarEl.style.display = 'flex';
+    if (headingEl) headingEl.innerHTML = 'Krishnanunni <span>Administrator Dashboard</span>';
+    if (subtextEl) subtextEl.textContent = 'Master Live Stock Control & Full Audit Trail (Tracks all user changes live and while offline).';
   }
 
   document.getElementById('btn-logout').addEventListener('click', () => {
@@ -1946,7 +1976,14 @@ function renderStockLogs() {
           ${badgeHtml}
           <div style="display:flex;align-items:center;gap:6px;">
             <span class="act-relative-tag">${dt.relative}</span>
-            <span class="act-sync-tag">Live</span>
+            ${(() => {
+              const sessionStart = currentUser && currentUser.loginTime ? new Date(currentUser.loginTime).getTime() : 0;
+              const logTime = log.time ? new Date(log.time).getTime() : 0;
+              const wasOffline = sessionStart > 0 && logTime < sessionStart;
+              return wasOffline 
+                ? '<span class="act-sync-tag offline" title="Changed while you were offline">Offline</span>' 
+                : '<span class="act-sync-tag live" title="Live change">Live</span>';
+            })()}
           </div>
         </div>
       </div>
