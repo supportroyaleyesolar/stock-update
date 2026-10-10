@@ -1065,7 +1065,7 @@ function verifyAuth() {
   } catch (e) {}
 
   if (!currentUser || !currentUser.username) {
-    window.location.replace('login.html');
+    window.location.replace('login.html?v=' + Date.now());
     return false;
   }
   return true;
@@ -1139,7 +1139,7 @@ function initUserHeader() {
   document.getElementById('btn-logout').addEventListener('click', () => {
     if (confirm(`Log out from account ${currentUser.displayName || currentUser.username}?`)) {
       localStorage.removeItem(USER_KEY);
-      window.location.replace('login.html');
+      window.location.replace('login.html?v=' + Date.now());
     }
   });
 }
