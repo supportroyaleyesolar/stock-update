@@ -426,13 +426,13 @@
   <script>
     // ── Staff Accounts Definition ──────────────────────────────────────
     const VALID_USERS = [
-      { username: 'manager',      displayName: 'Manager',      role: 'Store Admin', initial: 'M' },
-      { username: 'krishnanunni', displayName: 'Krishnanunni', role: 'Staff',       initial: 'K' },
-      { username: 'neethu',       displayName: 'Neethu',       role: 'Staff',       initial: 'N' },
-      { username: 'sharanya',     displayName: 'Sharanya',     role: 'Staff',       initial: 'S' },
-      { username: 'ashwathy',     displayName: 'Ashwathy',     role: 'Staff',       initial: 'A' },
-      { username: 'seena',        displayName: 'Seena',        role: 'Staff',       initial: 'S' },
-      { username: 'pranav',       displayName: 'Pranav',       role: 'Staff',       initial: 'P' }
+      { username: 'krishnanunni', displayName: 'Krishnanunni', role: 'Administrator', initial: 'K' },
+      { username: 'manager',      displayName: 'Manager',      role: 'Store Admin',   initial: 'M' },
+      { username: 'neethu',       displayName: 'Neethu',       role: 'Staff',         initial: 'N' },
+      { username: 'sharanya',     displayName: 'Sharanya',     role: 'Staff',         initial: 'S' },
+      { username: 'ashwathy',     displayName: 'Ashwathy',     role: 'Staff',         initial: 'A' },
+      { username: 'seena',        displayName: 'Seena',        role: 'Staff',         initial: 'S' },
+      { username: 'pranav',       displayName: 'Pranav',       role: 'Staff',         initial: 'P' }
     ];
 
     const MASTER_PASSWORD = 'eye321';
@@ -455,6 +455,7 @@
         <button type="button" class="user-chip" data-user="${u.username}">
           <span class="user-avatar-badge">${u.initial}</span>
           <span>${u.displayName}</span>
+          ${u.role === 'Administrator' ? '<span style="font-size:0.62rem;background:rgba(255,30,39,0.18);border:1px solid rgba(255,30,39,0.4);color:#ff334b;padding:1px 6px;border-radius:99px;font-weight:700;margin-left:4px;">Admin</span>' : ''}
         </button>
       `).join('');
 
