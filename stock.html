@@ -1058,48 +1058,612 @@ const REST_HEADERS = {
 };
 
 const DEFAULT_ITEMS = [
-  {id:"SP-01",name:"Solar Panel",category:"Solar Panel",qty:10},
-  {id:"INV-01",name:"Inverter",category:"Inverter",qty:10},
-  {id:"LB-01",name:"Lithium Battery",category:"Lithium Battery",qty:10},
-  {id:"CB-01",name:"Inverter + Lithium Battery",category:"Inverter + Battery",qty:10},
-  {id:"M-03",name:"ACDB - 1/3 Phase",category:"Main",qty:10},
-  {id:"M-04",name:"DCDB - 1/3 Phase",category:"Main",qty:10},
-  {id:"M-05",name:"Energy Meter - 1/3 Phase",category:"Main",qty:10},
-  {id:"M-06",name:"Net Meter - 1/3 Phase",category:"Main",qty:10},
-  {id:"M-07",name:"Meter Box - 1/3 Phase",category:"Main",qty:10},
-  {id:"M-08",name:"CT - 100/5A",category:"Main",qty:10},
-  {id:"M-09",name:"Lightening Arrester",category:"Main",qty:10},
-  {id:"M-10",name:"Earth Rod - 1m / 2m / 3m",category:"Main",qty:10},
-  {id:"M-11",name:"Earth Chamber",category:"Main",qty:10},
-  {id:"M-12",name:"Earth Compound",category:"Main",qty:10},
-  {id:"M-13",name:"Fire Extinguisher",category:"Main",qty:10},
-  {id:"M-14",name:"Danger Board",category:"Main",qty:10},
-  {id:"W-01",name:"DC Cable 4/6 Sq mm - 1C",category:"Wiring Kit",qty:10},
-  {id:"W-02",name:"AC Cable 4/6/10 Sq mm - 2C / 4C",category:"Wiring Kit",qty:10},
-  {id:"W-03",name:"Battery Cable - 16 / 25 / 35 / 50 Sq mm",category:"Wiring Kit",qty:10},
-  {id:"W-04",name:"Nylon Holder",category:"Wiring Kit",qty:10},
-  {id:"W-05",name:"MC4 Connector",category:"Wiring Kit",qty:10},
-  {id:"W-06",name:"Flexible Conduit 20/25",category:"Wiring Kit",qty:10},
-  {id:"W-07",name:"Conduit Tube",category:"Wiring Kit",qty:10},
-  {id:"W-08",name:"Earth Cable - 50 / 16 / 4",category:"Wiring Kit",qty:10},
-  {id:"W-09",name:"PVC Elbow / Bow / Bend / Tee",category:"Wiring Kit",qty:10},
-  {id:"W-10",name:"Fisher",category:"Wiring Kit",qty:10},
-  {id:"W-11",name:"Cable Tie",category:"Wiring Kit",qty:10},
-  {id:"W-12",name:"Clamp",category:"Wiring Kit",qty:10},
-  {id:"W-13",name:"Insulation Tape",category:"Wiring Kit",qty:10},
-  {id:"W-14",name:"Screw",category:"Wiring Kit",qty:10},
-  {id:"V-01",name:"GI End Cap",category:"Welding Kit",qty:10},
-  {id:"V-02",name:"Anchor Bolt",category:"Welding Kit",qty:10},
-  {id:"V-03",name:"Welding Rod",category:"Welding Kit",qty:10},
-  {id:"V-04",name:"Cutting Wheel",category:"Welding Kit",qty:10},
-  {id:"V-05",name:"Mild End",category:"Welding Kit",qty:10},
-  {id:"V-06",name:"Silicon",category:"Welding Kit",qty:10},
-  {id:"V-07",name:"Self Screw",category:"Welding Kit",qty:10},
-  {id:"V-08",name:"Sleeve",category:"Welding Kit",qty:10},
-  {id:"V-09",name:"Lightning Screw",category:"Welding Kit",qty:10},
-  {id:"V-10",name:"GI Pipe",category:"Welding Kit",qty:10},
-  {id:"V-11",name:"Tar Sheet",category:"Welding Kit",qty:10},
-  {id:"V-12",name:"Welding Rod End Cap",category:"Welding Kit",qty:10}
+  {
+    "id": "INV-12505",
+    "name": "BPS LS 1250",
+    "category": "Inverter",
+    "qty": 5
+  },
+  {
+    "id": "INV-13001",
+    "name": "Gen 1300",
+    "category": "Inverter",
+    "qty": 1
+  },
+  {
+    "id": "INV-12001",
+    "name": "HR 12000",
+    "category": "Inverter",
+    "qty": 1
+  },
+  {
+    "id": "INV-03005",
+    "name": "Inverter 3 kW",
+    "category": "Inverter",
+    "qty": 5
+  },
+  {
+    "id": "INV-03300",
+    "name": "Inverter 3.3 kW",
+    "category": "Inverter",
+    "qty": 0
+  },
+  {
+    "id": "INV-04000",
+    "name": "Inverter 4 kW",
+    "category": "Inverter",
+    "qty": 0
+  },
+  {
+    "id": "INV-08000",
+    "name": "Inverter 8 kW",
+    "category": "Inverter",
+    "qty": 0
+  },
+  {
+    "id": "INV-20001",
+    "name": "LS 2000",
+    "category": "Inverter",
+    "qty": 1
+  },
+  {
+    "id": "INV-30001",
+    "name": "LS 3000",
+    "category": "Inverter",
+    "qty": 1
+  },
+  {
+    "id": "INV-15506",
+    "name": "Nex 1550",
+    "category": "Inverter",
+    "qty": 6
+  },
+  {
+    "id": "INV-48001",
+    "name": "Online UPS 48V",
+    "category": "Inverter",
+    "qty": 1
+  },
+  {
+    "id": "INV-13503",
+    "name": "Rex 1350",
+    "category": "Inverter",
+    "qty": 3
+  },
+  {
+    "id": "INV-12100",
+    "name": "12V 1000",
+    "category": "Inverter + Battery",
+    "qty": 1
+  },
+  {
+    "id": "LIT-15001",
+    "name": "150 Ah Battery",
+    "category": "Lithium Battery",
+    "qty": 1
+  },
+  {
+    "id": "LIT-10505",
+    "name": "BPS LB 1050",
+    "category": "Lithium Battery",
+    "qty": 5
+  },
+  {
+    "id": "LIT-12252",
+    "name": "Lithium 1225",
+    "category": "Lithium Battery",
+    "qty": 2
+  },
+  {
+    "id": "LIT-15255",
+    "name": "Lithium 1525",
+    "category": "Lithium Battery",
+    "qty": 5
+  },
+  {
+    "id": "LIT-25602",
+    "name": "Lithium 25.6",
+    "category": "Lithium Battery",
+    "qty": 2
+  },
+  {
+    "id": "LIT-24603",
+    "name": "Viod 24.6",
+    "category": "Lithium Battery",
+    "qty": 3
+  },
+  {
+    "id": "MAI-03003",
+    "name": "ACDB - 3 Phase",
+    "category": "Main",
+    "qty": 3
+  },
+  {
+    "id": "MAI-04006",
+    "name": "DCDB - 3 Phase",
+    "category": "Main",
+    "qty": 6
+  },
+  {
+    "id": "MAI-49935",
+    "name": "Energy meter 3 phase",
+    "category": "Main",
+    "qty": 38
+  },
+  {
+    "id": "MAI-60002",
+    "name": "MPPT 60A",
+    "category": "Main",
+    "qty": 2
+  },
+  {
+    "id": "SOL-15992",
+    "name": "Net meter 3 phase",
+    "category": "Main",
+    "qty": 43
+  },
+  {
+    "id": "SOL-03463",
+    "name": "Adani 535",
+    "category": "Solar Panel",
+    "qty": 3
+  },
+  {
+    "id": "SOL-20743",
+    "name": "Adani 550",
+    "category": "Solar Panel",
+    "qty": 9
+  },
+  {
+    "id": "SOL-49672",
+    "name": "Adani 560",
+    "category": "Solar Panel",
+    "qty": 6
+  },
+  {
+    "id": "SOL-60505",
+    "name": "Adani 605",
+    "category": "Solar Panel",
+    "qty": 5
+  },
+  {
+    "id": "SOL-62001",
+    "name": "Adani 620",
+    "category": "Solar Panel",
+    "qty": 1
+  },
+  {
+    "id": "SOL-62501",
+    "name": "Adani 625",
+    "category": "Solar Panel",
+    "qty": 1
+  },
+  {
+    "id": "SOL-13107",
+    "name": "Adani 630 non dcr",
+    "category": "Solar Panel",
+    "qty": 10
+  },
+  {
+    "id": "SOL-63514",
+    "name": "Adani 635",
+    "category": "Solar Panel",
+    "qty": 14
+  },
+  {
+    "id": "SOL-62010",
+    "name": "Eastman 620",
+    "category": "Solar Panel",
+    "qty": 1
+  },
+  {
+    "id": "SOL-55803",
+    "name": "Emmvee 560",
+    "category": "Solar Panel",
+    "qty": 4
+  },
+  {
+    "id": "SOL-56772",
+    "name": "Emmvee 580",
+    "category": "Solar Panel",
+    "qty": 25
+  },
+  {
+    "id": "SOL-58080",
+    "name": "Emmvee 610",
+    "category": "Solar Panel",
+    "qty": 31
+  },
+  {
+    "id": "SOL-55001",
+    "name": "Exide 550",
+    "category": "Solar Panel",
+    "qty": 1
+  },
+  {
+    "id": "SOL-54504",
+    "name": "Microtek 545",
+    "category": "Solar Panel",
+    "qty": 4
+  },
+  {
+    "id": "SOL-75767",
+    "name": "Renew  545 (600)",
+    "category": "Solar Panel",
+    "qty": 6
+  },
+  {
+    "id": "SOL-25357",
+    "name": "Renew 545",
+    "category": "Solar Panel",
+    "qty": 6
+  },
+  {
+    "id": "SOL-61508",
+    "name": "Renew 550",
+    "category": "Solar Panel",
+    "qty": 1
+  },
+  {
+    "id": "SOL-10851",
+    "name": "Renew 615 non dcr",
+    "category": "Solar Panel",
+    "qty": 2
+  },
+  {
+    "id": "SOL-45826",
+    "name": "Renew 620",
+    "category": "Solar Panel",
+    "qty": 2
+  },
+  {
+    "id": "SOL-55501",
+    "name": "Vikram 555",
+    "category": "Solar Panel",
+    "qty": 1
+  },
+  {
+    "id": "SOL-58002",
+    "name": "Vikram 580 Non DCR",
+    "category": "Solar Panel",
+    "qty": 2
+  },
+  {
+    "id": "SOL-59501",
+    "name": "Vikram 595",
+    "category": "Solar Panel",
+    "qty": 1
+  },
+  {
+    "id": "SOL-51671",
+    "name": "Vikram 600",
+    "category": "Solar Panel",
+    "qty": 0
+  },
+  {
+    "id": "SOL-60001",
+    "name": "Vikram 600 Non DCR",
+    "category": "Solar Panel",
+    "qty": 1
+  },
+  {
+    "id": "SOL-63003",
+    "name": "Vikram 630 Non DCR",
+    "category": "Solar Panel",
+    "qty": 3
+  },
+  {
+    "id": "SOL-08531",
+    "name": "Waree 580",
+    "category": "Solar Panel",
+    "qty": 5
+  },
+  {
+    "id": "SOL-19287",
+    "name": "Waree 600",
+    "category": "Solar Panel",
+    "qty": 16
+  },
+  {
+    "id": "INV-01",
+    "name": "Inverter",
+    "category": "Inverter",
+    "qty": 11
+  },
+  {
+    "id": "LB-01",
+    "name": "Lithium Battery",
+    "category": "Lithium Battery",
+    "qty": 80
+  },
+  {
+    "id": "CB-01",
+    "name": "Inverter + Lithium Battery",
+    "category": "Inverter + Battery",
+    "qty": 10
+  },
+  {
+    "id": "M-03",
+    "name": "ACDB - 1/3 Phase",
+    "category": "Main",
+    "qty": 21
+  },
+  {
+    "id": "M-04",
+    "name": "DCDB - 1/3 Phase",
+    "category": "Main",
+    "qty": 13
+  },
+  {
+    "id": "M-05",
+    "name": "Energy Meter - 1/3 Phase",
+    "category": "Main",
+    "qty": 76
+  },
+  {
+    "id": "M-06",
+    "name": "Net Meter - 1/3 Phase",
+    "category": "Main",
+    "qty": 44
+  },
+  {
+    "id": "M-07",
+    "name": "Meter Box - 1/3 Phase",
+    "category": "Main",
+    "qty": 14
+  },
+  {
+    "id": "M-08",
+    "name": "Isolator - 2/4",
+    "category": "Main",
+    "qty": 10
+  },
+  {
+    "id": "M-09",
+    "name": "Earth Pit Chamber",
+    "category": "Main",
+    "qty": 10
+  },
+  {
+    "id": "M-10",
+    "name": "Earth Compound",
+    "category": "Main",
+    "qty": 10
+  },
+  {
+    "id": "M-11",
+    "name": "Earth Rod",
+    "category": "Main",
+    "qty": 10
+  },
+  {
+    "id": "M-12",
+    "name": "Lightning Arrester",
+    "category": "Main",
+    "qty": 10
+  },
+  {
+    "id": "M-13",
+    "name": "Earth Cable 50 SqMM Yellow",
+    "category": "Main",
+    "qty": 10
+  },
+  {
+    "id": "M-14",
+    "name": "Earth Cable 16 SqMM Green",
+    "category": "Main",
+    "qty": 10
+  },
+  {
+    "id": "M-15",
+    "name": "G.I. Pipe 2x5 - 1.5",
+    "category": "Main",
+    "qty": 10
+  },
+  {
+    "id": "M-16",
+    "name": "G.I. Pipe 1x1",
+    "category": "Main",
+    "qty": 10
+  },
+  {
+    "id": "M-17",
+    "name": "DC Cable",
+    "category": "Main",
+    "qty": 10
+  },
+  {
+    "id": "M-18",
+    "name": "AC Cable",
+    "category": "Main",
+    "qty": 10
+  },
+  {
+    "id": "M-19",
+    "name": "P.V.C Wiring Pipe 20/25 MM",
+    "category": "Main",
+    "qty": 10
+  },
+  {
+    "id": "M-20",
+    "name": "Dummy Square Plate 4 inch",
+    "category": "Main",
+    "qty": 10
+  },
+  {
+    "id": "M-21",
+    "name": "Copper Lug 10 MM",
+    "category": "Main",
+    "qty": 10
+  },
+  {
+    "id": "M-22",
+    "name": "Epoxy Thinner / Paint",
+    "category": "Main",
+    "qty": 10
+  },
+  {
+    "id": "M-23",
+    "name": "Tar Sheet",
+    "category": "Main",
+    "qty": 10
+  },
+  {
+    "id": "W-01",
+    "name": "Neutral Link",
+    "category": "Wiring Kit",
+    "qty": 10
+  },
+  {
+    "id": "W-02",
+    "name": "Earth Bench",
+    "category": "Wiring Kit",
+    "qty": 10
+  },
+  {
+    "id": "W-03",
+    "name": "Cable Trench",
+    "category": "Wiring Kit",
+    "qty": 10
+  },
+  {
+    "id": "W-04",
+    "name": "Nylon Holder",
+    "category": "Wiring Kit",
+    "qty": 10
+  },
+  {
+    "id": "W-05",
+    "name": "MC4 Connector",
+    "category": "Wiring Kit",
+    "qty": 10
+  },
+  {
+    "id": "W-06",
+    "name": "Flexible Conduit 20/25",
+    "category": "Wiring Kit",
+    "qty": 10
+  },
+  {
+    "id": "W-07",
+    "name": "Conduit Tube",
+    "category": "Wiring Kit",
+    "qty": 10
+  },
+  {
+    "id": "W-08",
+    "name": "Earth Cable - 50 / 16 / 4",
+    "category": "Wiring Kit",
+    "qty": 10
+  },
+  {
+    "id": "W-09",
+    "name": "PVC Elbow / Bow / Bend / Tee",
+    "category": "Wiring Kit",
+    "qty": 10
+  },
+  {
+    "id": "W-10",
+    "name": "Fisher",
+    "category": "Wiring Kit",
+    "qty": 1000
+  },
+  {
+    "id": "W-11",
+    "name": "Cable Tie",
+    "category": "Wiring Kit",
+    "qty": 10
+  },
+  {
+    "id": "W-12",
+    "name": "Clamp",
+    "category": "Wiring Kit",
+    "qty": 10
+  },
+  {
+    "id": "W-13",
+    "name": "Insulation Tape",
+    "category": "Wiring Kit",
+    "qty": 10
+  },
+  {
+    "id": "W-14",
+    "name": "Screw",
+    "category": "Wiring Kit",
+    "qty": 10
+  },
+  {
+    "id": "V-01",
+    "name": "GI End Cap",
+    "category": "Welding Kit",
+    "qty": 10
+  },
+  {
+    "id": "V-02",
+    "name": "Anchor Bolt",
+    "category": "Welding Kit",
+    "qty": 10
+  },
+  {
+    "id": "V-03",
+    "name": "Welding Rod",
+    "category": "Welding Kit",
+    "qty": 10
+  },
+  {
+    "id": "V-04",
+    "name": "Cutting Wheel",
+    "category": "Welding Kit",
+    "qty": 10
+  },
+  {
+    "id": "V-05",
+    "name": "Mild End",
+    "category": "Welding Kit",
+    "qty": 10
+  },
+  {
+    "id": "V-06",
+    "name": "Silicon",
+    "category": "Welding Kit",
+    "qty": 10
+  },
+  {
+    "id": "V-07",
+    "name": "Self Screw",
+    "category": "Welding Kit",
+    "qty": 10
+  },
+  {
+    "id": "V-08",
+    "name": "Sleeve",
+    "category": "Welding Kit",
+    "qty": 10
+  },
+  {
+    "id": "V-09",
+    "name": "Lightning Screw",
+    "category": "Welding Kit",
+    "qty": 10
+  },
+  {
+    "id": "V-10",
+    "name": "GI Pipe",
+    "category": "Welding Kit",
+    "qty": 10
+  },
+  {
+    "id": "V-11",
+    "name": "Tar Sheet",
+    "category": "Welding Kit",
+    "qty": 10
+  },
+  {
+    "id": "V-12",
+    "name": "Welding Rod End Cap",
+    "category": "Welding Kit",
+    "qty": 10
+  }
 ];
 
 let items = [];
