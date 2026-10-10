@@ -10,6 +10,19 @@
   <meta name="description" content="Royal Eye Solar Power - Live Material & Equipment Stock Register with Instant Multi-Device Sync." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <script>
+    (function() {
+      try {
+        var raw = localStorage.getItem('royaleye_user');
+        if (raw) {
+          var u = JSON.parse(raw);
+          if (u && (u.username || '').toLowerCase() === 'krishnanunni') {
+            document.documentElement.classList.add('is-admin');
+          }
+        }
+      } catch(e) {}
+    })();
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet" />
   <!-- Supabase JS Client for Realtime WebSocket Synchronization -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -244,11 +257,35 @@
     /* ═════════════════════════════════════════════════════════════════
        RIGHT SIDE WEBPAGE TAB - LIVE STOCK CHANGES PANEL
        ═════════════════════════════════════════════════════════════════ */
-    body:not(.is-admin) .activity-sidebar,
-    body:not(.is-admin) .floating-side-tab,
-    body:not(.is-admin) #btn-header-activity {
+    /* ═════════════════════════════════════════════════════════════════
+       STRICT SECURITY: CHANGES PANEL & AUDIT LOG ONLY VISIBLE TO KRISHNANUNNI
+       ═════════════════════════════════════════════════════════════════ */
+    .activity-sidebar,
+    .floating-side-tab,
+    #btn-header-activity {
       display: none !important;
       pointer-events: none !important;
+    }
+
+    /* ONLY show when is-admin class is present (Krishnanunni) */
+    html.is-admin .activity-sidebar,
+    body.is-admin .activity-sidebar {
+      display: flex !important;
+      pointer-events: auto !important;
+    }
+    html.is-admin .activity-sidebar.collapsed,
+    body.is-admin .activity-sidebar.collapsed {
+      display: none !important;
+    }
+    html.is-admin .floating-side-tab,
+    body.is-admin .floating-side-tab {
+      display: flex !important;
+      pointer-events: auto !important;
+    }
+    html.is-admin #btn-header-activity,
+    body.is-admin #btn-header-activity {
+      display: flex !important;
+      pointer-events: auto !important;
     }
 
     .act-sync-tag.live{
@@ -895,7 +932,7 @@
 
       <footer class="app-footer">
         <span><strong>Royal Eye Solar Power</strong> &bull; Edamuttam, Thrissur, Kerala - 680568</span>
-        <span>📡 Live Cloud Database Synced &bull; Multi-Device Audit Log</span>
+        <span id="footer-sync-note">📡 Live Cloud Database Synced &bull; Royal Eye Solar Power</span>
       </footer>
     </main>
 
@@ -1069,6 +1106,7 @@ function initUserHeader() {
   }
 
   // Permission Check: ONLY Krishnanunni (Administrator) can see the Live Stock Changes panel
+  document.documentElement.classList.toggle('is-admin', adminUser);
   document.body.classList.toggle('is-admin', adminUser);
 
   const headerActBtn = document.getElementById('btn-header-activity');
@@ -1076,19 +1114,26 @@ function initUserHeader() {
   const sidebarEl = document.getElementById('activity-sidebar');
   const headingEl = document.getElementById('hero-heading');
   const subtextEl = document.getElementById('hero-subtext');
+  const footerNote = document.getElementById('footer-sync-note');
 
   if (!adminUser) {
-    if (headerActBtn) headerActBtn.style.display = 'none';
-    if (floatBtn) floatBtn.style.display = 'none';
-    if (sidebarEl) sidebarEl.style.display = 'none';
+    // Physically REMOVE the Changes panel and buttons from DOM for all other staff
+    if (headerActBtn) headerActBtn.remove();
+    if (floatBtn) floatBtn.remove();
+    if (sidebarEl) sidebarEl.remove();
+    const backdropEl = document.getElementById('sidebar-backdrop');
+    if (backdropEl) backdropEl.remove();
+
     if (headingEl) headingEl.innerHTML = 'Material <span>Stock Register</span>';
     if (subtextEl) subtextEl.textContent = 'Real-time live multi-device inventory for Solar Panels, Inverters, Lithium Batteries, Combos & Installation Kits.';
+    if (footerNote) footerNote.innerHTML = '📡 Live Cloud Database Synced &bull; Royal Eye Solar Power';
   } else {
     if (headerActBtn) headerActBtn.style.display = 'flex';
     if (floatBtn) floatBtn.style.display = 'flex';
     if (sidebarEl) sidebarEl.style.display = 'flex';
     if (headingEl) headingEl.innerHTML = 'Krishnanunni <span>Administrator Dashboard</span>';
     if (subtextEl) subtextEl.textContent = 'Master Live Stock Control & Full Audit Trail (Tracks all user changes live and while offline).';
+    if (footerNote) footerNote.innerHTML = '👑 Administrator Mode &bull; Live Audit Log Active';
   }
 
   document.getElementById('btn-logout').addEventListener('click', () => {
