@@ -1,0 +1,287 @@
+================================================================================
+ROYAL EYE SOLAR POWER - ARCHITECTURE, DATABASE & PLATFORM GUIDE
+================================================================================
+Document: HOW_IT_WORKS_DATABASE_AND_PLATFORMS.txt
+Repository: supportroyaleyesolar/stock-update
+Date: 2026-10-12
+================================================================================
+
+TABLE OF CONTENTS:
+--------------------------------------------------------------------------------
+1. EXECUTIVE SUMMARY: HOW DOES THIS WEBSITE WORK?
+2. DOES GITHUB WORK AS THE DATABASE? (CLARIFICATION)
+3. HOW MANY PLATFORMS ARE USED? (COMPLETE LIST)
+4. DETAILED BREAKDOWN OF EACH PLATFORM & ITS ROLE
+5. HOW THE DATABASE & DATA SYNC WORK STEP-BY-STEP
+6. HOW TO PUSH CODE UPDATES THROUGH GITHUB (DEPLOYMENT WORKFLOW)
+7. DATABASE SETUP & SQL REFERENCE (SUPABASE)
+8. SUMMARY TABLE OF CREDENTIALS & ENDPOINTS
+--------------------------------------------------------------------------------
+
+
+================================================================================
+1. EXECUTIVE SUMMARY: HOW DOES THIS WEBSITE WORK?
+================================================================================
+Royal Eye Solar Power (Royal Eye Excellence - REX) is a real-time web application
+designed for:
+  • Live inventory & daily stock tracking across all solar panels, inverters,
+    batteries, and accessories.
+  • Sales & agent marketing tools (1-click WhatsApp quote generator, price pitch,
+    MRP savings calculator, and printable stock reports).
+  • Role-based staff/admin dashboard with PIN security, stock edit controls,
+    and audit trail logging.
+
+When someone opens the website:
+  1. The browser loads the frontend (HTML, CSS, JavaScript) from the hosting
+     server (Netlify / GitHub).
+  2. The JavaScript connects to the cloud database (Supabase) via REST API and
+     WebSockets.
+  3. All stock numbers, prices, and specifications load directly from the database.
+  4. If an admin edits a stock quantity, Supabase broadcasts that update
+     INSTANTLY to all open devices (phones, tablets, laptops) via WebSockets
+     without refreshing the page.
+
+
+================================================================================
+2. DOES GITHUB WORK AS THE DATABASE? (CLARIFICATION)
+================================================================================
+Short Answer: NO, GitHub is NOT the live database. GitHub is the SOURCE CODE
+repository and version control system.
+
+Here is how GitHub and the Database are related:
+
+A. WHAT GITHUB DOES:
+   • Stores all the application source code (HTML, CSS, JS, SQL scripts, configs).
+   • Keeps a history of every code commit and feature addition.
+   • Acts as the trigger for Netlify: When you push new code to GitHub, Netlify
+     automatically pulls the code and publishes the updated website live.
+   • Stores default fallback inventory (`js/inventory-data.js`) used if someone
+     runs the app without an internet connection or before connecting to Supabase.
+
+B. WHAT THE REAL DATABASE IS:
+   • The real cloud database is SUPABASE (hosted PostgreSQL).
+   • When an admin clicks "+", "-", or edits a stock number on the website,
+     the update is NOT written to GitHub. Instead, it is sent directly to
+     Supabase table `public.inventory`.
+   • This is why stock changes are instant (under 100 milliseconds) and do NOT
+     require a git commit or site rebuild.
+
+
+================================================================================
+3. HOW MANY PLATFORMS ARE USED? (COMPLETE LIST)
+================================================================================
+The Royal Eye Solar Power ecosystem uses a total of 7 PLATFORMS & SERVICES:
+
+  1. GITHUB             -> Code Repository, Version Control & CI/CD trigger
+  2. SUPABASE           -> Live Cloud PostgreSQL Database & Real-time WebSockets
+  3. NETLIFY            -> Web Hosting, Global CDN & Automated Deployment
+  4. NODE.JS (server.js)-> Local Development Server (localhost:3000)
+  5. HTML5 LOCALSTORAGE -> Offline Browser Cache & Resilience Fallback
+  6. WHATSAPP API / WEB -> 1-Click Client Quotations & Marketing Pitch Delivery
+  7. JSDELIVR / CDN     -> External JS Libraries & Icon Bundles
+
+
+================================================================================
+4. DETAILED BREAKDOWN OF EACH PLATFORM & ITS ROLE
+================================================================================
+
+--------------------------------------------------------------------------------
+PLATFORM 1: GITHUB (Code Management & Automation)
+--------------------------------------------------------------------------------
+• Repository: https://github.com/supportroyaleyesolar/stock-update.git
+• Branch: main
+• Role:
+  - Central home for all files: index.html, stock.html, login.html, js/, css/.
+  - Allows multiple developers to collaborate and track versions.
+  - Connected to Netlify via webhook: Any git push to the 'main' branch
+    automatically triggers a new build and deployment on Netlify.
+
+--------------------------------------------------------------------------------
+PLATFORM 2: SUPABASE (Live Cloud Database & Realtime Sync)
+--------------------------------------------------------------------------------
+• Project URL: https://ffbyqnxhdeafzahgaqxf.supabase.co
+• Role:
+  - PostgreSQL Database: Houses table `public.inventory` containing all products,
+    quantities, prices, MRP, brand, verified dates, and specs.
+  - Audit Trail: Stores all stock modification logs (using category '__audit_log__')
+    so the administrator (krishnanunni) can review who changed what and when.
+  - Realtime WebSockets: Uses `supabase_realtime` channels. Whenever any row in
+    `inventory` changes, Supabase pushes the change to all open browser tabs
+    in real time.
+  - RESTful API (PostgREST): Allows the frontend JS to fetch and update records
+    securely using the Supabase Anon Key.
+
+--------------------------------------------------------------------------------
+PLATFORM 3: NETLIFY (Hosting & Delivery)
+--------------------------------------------------------------------------------
+• Configuration File: netlify.toml
+• Role:
+  - Hosts the live public website and serves files across worldwide CDN edges.
+  - Zero-maintenance static hosting with automated SSL/HTTPS certificate.
+  - Custom HTTP headers configured in netlify.toml:
+    * Cache-Control: prevents browsers from caching stale stock or scripts.
+    * Security headers (X-Frame-Options: DENY, X-Content-Type-Options: nosniff).
+  - Automatically rebuilds the site whenever changes are pushed to GitHub.
+
+--------------------------------------------------------------------------------
+PLATFORM 4: NODE.JS / LOCAL SERVER (Local Development)
+--------------------------------------------------------------------------------
+• Script: server.js
+• Command to run: node server.js
+• Role:
+  - Lightweight built-in HTTP server for local testing at http://localhost:3000.
+  - Handles routing (/ -> index.html, /login -> login.html, /stock -> index.html).
+  - Used when developing offline or before pushing changes to GitHub.
+
+--------------------------------------------------------------------------------
+PLATFORM 5: HTML5 BROWSER LOCALSTORAGE (Offline Resilience)
+--------------------------------------------------------------------------------
+• Location: User's Browser
+• Role:
+  - Caches the last loaded inventory data in the browser's local memory.
+  - If the user loses internet connection or Supabase is temporarily unreachable,
+    the app seamlessly falls back to localStorage so agents can still view
+    products and prices.
+  - Queues pending offline edits and pushes them once internet is restored.
+
+--------------------------------------------------------------------------------
+PLATFORM 6: WHATSAPP INTEGRATION (Agent Marketing Tools)
+--------------------------------------------------------------------------------
+• Code: js/agent-tools.js
+• Role:
+  - Formats product data, offer prices, MRP savings, and specs into a WhatsApp
+    marketing pitch with emojis and company branding.
+  - Opens `https://api.whatsapp.com/send?text=...` directly on agent phones
+    or WhatsApp Web to share quotations with clients with one click.
+
+--------------------------------------------------------------------------------
+PLATFORM 7: JSDELIVR / CDN (External Dependencies)
+--------------------------------------------------------------------------------
+• Role:
+  - Supplies the Supabase JS client: https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2
+  - Supplies Google Fonts (Outfit, Inter) and icon libraries.
+
+
+================================================================================
+5. HOW THE DATABASE & DATA SYNC WORK STEP-BY-STEP
+================================================================================
+
+Here is the exact lifecycle of how data travels through the system:
+
+[A] READING DATA (When user opens the website):
+    1. User opens https://royaleyesolar.netlify.app (or custom domain).
+    2. index.html loads and runs js/storage.js & js/app.js.
+    3. The JavaScript sends a GET request to:
+       https://ffbyqnxhdeafzahgaqxf.supabase.co/rest/v1/inventory?category=neq.__audit_log__&order=sort_order.asc
+    4. Supabase returns the current list of products in JSON format.
+    5. The UI renders product cards with current stock badges.
+    6. A local copy is cached in localStorage as a backup.
+
+[B] REAL-TIME SUBSCRIPTION (Listening for live changes):
+    1. The frontend registers a Supabase Realtime channel:
+       sbClient.channel('inventory_changes')
+         .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, handler)
+         .subscribe();
+    2. The WebSocket connection stays open in the background.
+
+[C] UPDATING STOCK (When Admin modifies stock):
+    1. Admin logs in with credentials/PIN (e.g., eye321 / krishnanunni).
+    2. Admin increments, decrements, or enters a new stock quantity.
+    3. The app sends an HTTP PATCH / POST request to Supabase:
+       URL: /rest/v1/inventory?product_id=eq.[PRODUCT_ID]
+       Body: { daily_stock: 45, verified_date: "12 Oct 2026" }
+    4. An audit log row is also written to Supabase:
+       Body: {
+         product_id: "log-[TIMESTAMP]",
+         category: "__audit_log__",
+         name: "Loom Solar 550W Mono PERC",
+         spec_highlights: "Changed by krishnanunni: 50 -> 45"
+       }
+    5. Supabase receives the update and broadcasts a WebSocket notification
+       to EVERY connected device.
+    6. All other open screens instantly update the stock counter on their screen!
+
+
+================================================================================
+6. HOW TO PUSH CODE UPDATES THROUGH GITHUB (DEPLOYMENT WORKFLOW)
+================================================================================
+Whenever you edit HTML, CSS, JavaScript, or add new features, follow these steps
+to publish them live via GitHub and Netlify:
+
+Step 1: Open your terminal in the project directory:
+        cd c:\Users\MYPC\Downloads\royaleye
+
+Step 2: Check modified files:
+        git status
+
+Step 3: Stage all modified files:
+        git add .
+
+Step 4: Commit your changes with a clear description:
+        git commit -m "Update inventory pricing layout and agent tools"
+
+Step 5: Push your changes to GitHub:
+        git push origin main
+
+Step 6: Automatic Deployment:
+        • Netlify detects the push to GitHub 'main'.
+        • Netlify automatically builds and updates the live site in ~30 seconds.
+        • No manual server uploads or FTP required!
+
+
+================================================================================
+7. DATABASE SETUP & SQL REFERENCE (SUPABASE)
+================================================================================
+The database table in Supabase was created using `supabase_setup.sql`:
+
+--------------------------------------------------------------------------------
+TABLE: public.inventory
+--------------------------------------------------------------------------------
+Column Name     | Data Type    | Description
+----------------+--------------+------------------------------------------------
+product_id      | TEXT (PK)    | Unique Product ID (e.g. "loom-550w-mono")
+name            | TEXT         | Product full title
+category        | TEXT         | solar-panels, inverters, batteries, accessories
+brand           | TEXT         | Manufacturer (Loom Solar, Microtek, Exide, etc.)
+daily_stock     | INTEGER      | Quantity physically available today
+price           | NUMERIC      | Dealer/Offer price in INR
+mrp             | NUMERIC      | Maximum Retail Price in INR
+verified_date   | TEXT         | Date string when stock was verified
+badge           | TEXT         | Badge text (e.g. "HOT SELLER", "BEST VALUE")
+spec_capacity   | TEXT         | E.g. "550 Watts", "5 kVA", "150 Ah"
+spec_type       | TEXT         | E.g. "Mono PERC Half-Cut", "Pure Sine Wave"
+spec_efficiency | TEXT         | E.g. "21.3% Efficiency"
+spec_warranty   | TEXT         | E.g. "25 Years", "5 Years"
+spec_voltage    | TEXT         | E.g. "24V", "48V"
+spec_highlights | TEXT         | Additional notes or audit description
+sort_order      | INTEGER      | Display order index
+updated_at      | TIMESTAMPTZ  | Auto-updated timestamp
+
+To view or manage the database directly:
+  1. Log into https://app.supabase.com
+  2. Select the project: "Royal Eye Solar" (ffbyqnxhdeafzahgaqxf)
+  3. Go to "Table Editor" -> "inventory" to view or edit rows manually.
+  4. Go to "SQL Editor" if you need to run queries or modifications.
+
+
+================================================================================
+8. SUMMARY TABLE OF CREDENTIALS & ENDPOINTS
+================================================================================
+• GitHub Repository:
+  https://github.com/supportroyaleyesolar/stock-update.git
+
+• Supabase Project URL:
+  https://ffbyqnxhdeafzahgaqxf.supabase.co
+
+• Supabase Public Anon Key:
+  sb_publishable_1xEblsxiuRXajEMGrbl-WQ_W70ZX3hB
+
+• Netlify Hosting:
+  Connected to GitHub repository 'supportroyaleyesolar/stock-update'
+
+• Local Dev Server:
+  http://localhost:3000 (run with: node server.js)
+
+================================================================================
+END OF DOCUMENT
+================================================================================
