@@ -303,6 +303,26 @@
       border-radius:99px;
     }
 
+    .act-del-item-btn{
+      background:transparent;
+      border:1px solid transparent;
+      color:var(--txt3);
+      cursor:pointer;
+      padding:3px 4px;
+      border-radius:4px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      transition:all .18s ease;
+      opacity:.45;
+    }
+    .act-del-item-btn:hover{
+      color:var(--crimson);
+      background:rgba(255,51,75,.15);
+      border-color:rgba(255,51,75,.3);
+      opacity:1;
+    }
+
     .activity-sidebar{
       width:340px;
       min-width:340px;
@@ -1867,7 +1887,8 @@ let stockLogs = [];
 // Persist change log permanently to Supabase so Administrator can view anytime
 async function pushStockChangeLogToCloud(change) {
   try {
-    const logId = 'LOG-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+    const logId = change.id || ('LOG-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7));
+    change.id = logId;
     const row = {
       product_id: logId,
       name: change.productName || 'Stock Update',
@@ -1914,32 +1935,31 @@ async function loadCloudStockLogs() {
     });
     if (!res.ok) return;
     const rows = await res.json();
-    if (!Array.isArray(rows) || rows.length === 0) return;
+    if (!Array.isArray(rows)) return;
+
+    if (rows.length === 0) {
+      if (stockLogs.length > 0) {
+        stockLogs = [];
+        saveStockLogs();
+        renderStockLogs();
+      }
+      return;
+    }
 
     const cloudLogs = [];
     for (const r of rows) {
       try {
         if (r.spec_highlights) {
           const parsed = JSON.parse(r.spec_highlights);
+          if (!parsed.id) parsed.id = r.product_id;
           cloudLogs.push(parsed);
         }
       } catch (e) {}
     }
 
-    if (cloudLogs.length > 0) {
-      const seen = new Set();
-      const merged = [];
-      for (const item of [...cloudLogs, ...stockLogs]) {
-        const key = item.id || (item.productId + '_' + item.time + '_' + item.newQty);
-        if (!seen.has(key)) {
-          seen.add(key);
-          merged.push(item);
-        }
-      }
-      stockLogs = merged.slice(0, 200);
-      saveStockLogs();
-      renderStockLogs();
-    }
+    stockLogs = cloudLogs.slice(0, 200);
+    saveStockLogs();
+    renderStockLogs();
   } catch (err) {
     console.warn('Error loading cloud stock logs:', err);
   }
@@ -1965,7 +1985,7 @@ function saveStockLogs() {
 
 function addStockChangeLog(change, isLocal = true) {
   if (!change.time) change.time = new Date().toISOString();
-  if (!change.id) change.id = 'log-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+  if (!change.id) change.id = 'LOG-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
 
   // Prevent duplicate within 1.5 seconds
   const dup = stockLogs.find(l => 
@@ -2098,12 +2118,19 @@ function renderStockLogs() {
             <span class="act-avatar" style="background:${meta.color};">${initial}</span>
             <span class="act-user-name">${escHtml(log.user || meta.displayName)}</span>
           </div>
-          <div class="act-datetime-wrap" title="${dt.full}">
-            <span class="act-date-pill">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              ${dt.date}
-            </span>
-            <span class="act-time-val">${dt.time}</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="act-datetime-wrap" title="${dt.full}">
+              <span class="act-date-pill">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                ${dt.date}
+              </span>
+              <span class="act-time-val">${dt.time}</span>
+            </div>
+            ${isAdmin() ? `
+              <button class="act-del-item-btn" data-log-id="${escHtml(log.id || (log.productId + '_' + log.time))}" title="Delete this record from history">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            ` : ''}
           </div>
         </div>
         <div class="act-product-name">${escHtml(log.productName || log.productId)}</div>
@@ -2295,42 +2322,85 @@ if (actPrintBtn) {
   actPrintBtn.addEventListener('click', printStockHistory);
 }
 
-// Clear Activity History button (offers print first)
-document.getElementById('activity-clear-btn').addEventListener('click', () => {
-  if (!stockLogs || stockLogs.length === 0) {
-    showToast('Activity history is already empty.', 'info');
+// Delete single stock change history item
+async function deleteSingleStockLog(logId) {
+  if (!isAdmin()) {
+    showToast('🔒 Only Krishnanunni can delete history records.', 'warn');
     return;
   }
+  const target = stockLogs.find(l => l.id === logId || (l.productId + '_' + l.time) === logId);
+  const prodName = target ? (target.productName || target.productId || 'this change') : 'this change';
 
-  const wantPrint = confirm(
-    `Changes History contains ${stockLogs.length} record(s).\n\nWould you like to PRINT the report before deleting?\n\n• Click OK to PRINT first.\n• Click CANCEL to proceed to delete directly.`
-  );
+  if (!confirm(`Permanently delete history record for "${prodName}"?`)) return;
 
-  if (wantPrint) {
-    printStockHistory();
-    setTimeout(() => {
-      if (confirm('Did you finish printing? Do you now want to CLEAR the changes history?')) {
-        stockLogs = [];
-        saveStockLogs();
-        renderStockLogs();
-        showToast('Changes history cleared.', 'info');
-      }
-    }, 800);
-  } else {
-    if (confirm(`Permanently clear all ${stockLogs.length} change history records from cloud and device?`)) {
-      stockLogs = [];
-      saveStockLogs();
-      renderStockLogs();
-      try {
-        fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}?category=eq.__audit_log__`, {
-          method: 'DELETE',
-          headers: REST_HEADERS
-        }).catch(() => {});
-      } catch(e) {}
-      showToast('Changes history permanently cleared from cloud.', 'info');
-    }
+  stockLogs = stockLogs.filter(l => l.id !== logId && (l.productId + '_' + l.time) !== logId);
+  saveStockLogs();
+  renderStockLogs();
+
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}?category=eq.__audit_log__&product_id=eq.${encodeURIComponent(logId)}`, {
+      method: 'DELETE',
+      headers: REST_HEADERS
+    });
+  } catch (err) {
+    console.warn('Failed to delete cloud audit record:', err);
   }
-});
+
+  broadcastStockChange({ action: 'delete_history_item', logId: logId });
+  showToast('History record deleted.', 'info');
+}
+
+// Clear Activity History button (clears all history)
+const actClearBtn = document.getElementById('activity-clear-btn');
+if (actClearBtn) {
+  actClearBtn.addEventListener('click', async () => {
+    if (!isAdmin()) {
+      showToast('🔒 Only Krishnanunni can clear changes history.', 'warn');
+      return;
+    }
+    if (!stockLogs || stockLogs.length === 0) {
+      showToast('Activity history is already empty.', 'info');
+      return;
+    }
+
+    const count = stockLogs.length;
+    const ok = confirm(
+      `Permanently clear all ${count} change history records from cloud database and all devices?\n\n(Tip: You can click "Print" first if you wish to export a report)`
+    );
+    if (!ok) return;
+
+    stockLogs = [];
+    saveStockLogs();
+    renderStockLogs();
+
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/${TABLE_NAME}?category=eq.__audit_log__`, {
+        method: 'DELETE',
+        headers: REST_HEADERS
+      });
+    } catch (err) {
+      console.warn('Failed to clear cloud history:', err);
+    }
+
+    broadcastStockChange({ action: 'clear_history' });
+    showToast(`Permanently cleared ${count} change history records.`, 'success');
+  });
+}
+
+// Event delegation for individual delete buttons in the activity list
+const actListContainer = document.getElementById('activity-list');
+if (actListContainer) {
+  actListContainer.addEventListener('click', (e) => {
+    const delBtn = e.target.closest('.act-del-item-btn');
+    if (delBtn) {
+      e.stopPropagation();
+      const logId = delBtn.getAttribute('data-log-id');
+      if (logId) {
+        deleteSingleStockLog(logId);
+      }
+    }
+  });
+}
 
 // Toggle Right Side Tab Drawer
 const sidebarEl = document.getElementById('activity-sidebar');
@@ -2509,6 +2579,22 @@ function initRealtime() {
         .on('broadcast', { event: 'stock_change' }, (payload) => {
           if (payload && payload.payload) {
             const data = payload.payload;
+
+            if (data.action === 'clear_history') {
+              stockLogs = [];
+              saveStockLogs();
+              renderStockLogs();
+              return;
+            }
+
+            if (data.action === 'delete_history_item') {
+              const targetId = data.logId;
+              stockLogs = stockLogs.filter(l => l.id !== targetId && (l.productId + '_' + l.time) !== targetId);
+              saveStockLogs();
+              renderStockLogs();
+              return;
+            }
+
             addStockChangeLog(data, false);
 
             if (data.action === 'delete') {
