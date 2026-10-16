@@ -2880,26 +2880,30 @@ async function fetchCloudData() {
     if (!Array.isArray(data) || data.length === 0) return null;
 
     return data.filter(row => row.category !== '__audit_log__').map(row => {
-      let yesterdayQty = typeof row.daily_stock === 'number' ? row.daily_stock : (parseInt(row.daily_stock, 10) || 0);
+      const currentQty = typeof row.daily_stock === 'number' ? row.daily_stock : (parseInt(row.daily_stock, 10) || 0);
+      let yesterdayQty = currentQty; // default: no change
       let goneQty = 0;
-      if (row.spec_highlights) {
+
+      // Priority 1: DEFAULT_ITEMS has the authoritative yesterday/gone values set by admin
+      const def = DEFAULT_ITEMS.find(d => d.id === row.product_id || (d.name && row.name && d.name.toLowerCase() === row.name.toLowerCase()));
+      if (def) {
+        if (def.yesterdayQty !== undefined) yesterdayQty = def.yesterdayQty;
+        if (def.goneQty !== undefined) goneQty = def.goneQty;
+      } else if (row.spec_highlights) {
+        // Priority 2: spec_highlights from Supabase (for items not in DEFAULT_ITEMS)
         try {
           const extra = JSON.parse(row.spec_highlights);
           if (extra.yesterdayQty !== undefined) yesterdayQty = extra.yesterdayQty;
           if (extra.goneQty !== undefined) goneQty = extra.goneQty;
         } catch(e) {}
       }
-      const def = DEFAULT_ITEMS.find(d => d.id === row.product_id || (d.name && row.name && d.name.toLowerCase() === row.name.toLowerCase()));
-      if (def) {
-        if (def.yesterdayQty !== undefined) yesterdayQty = def.yesterdayQty;
-        if (def.goneQty !== undefined) goneQty = def.goneQty;
-      }
+
       return {
         id: row.product_id,
         name: row.name,
         category: row.category,
         yesterdayQty: yesterdayQty,
-        qty: typeof row.daily_stock === 'number' ? row.daily_stock : (parseInt(row.daily_stock, 10) || 0),
+        qty: currentQty,
         goneQty: goneQty,
         brand: row.brand || 'Royal Eye',
         verified_date: row.verified_date || null,
@@ -3158,6 +3162,14 @@ async function pollSync() {
 
     // Check if new products were added or removed
     if (remote.length !== items.length) {
+      // Preserve yesterdayQty/goneQty from DEFAULT_ITEMS on full refresh
+      remote.forEach(r => {
+        const def = DEFAULT_ITEMS.find(d => d.id === r.id);
+        if (def) {
+          if (def.yesterdayQty !== undefined) r.yesterdayQty = def.yesterdayQty;
+          if (def.goneQty !== undefined) r.goneQty = def.goneQty;
+        }
+      });
       items = remote;
       saveLocalCache();
       render();
@@ -3170,6 +3182,10 @@ async function pollSync() {
 
       const local = items.find(i => i.id === r.id);
       if (local) {
+        // Always preserve local yesterdayQty/goneQty (from DEFAULT_ITEMS, set at load)
+        r.yesterdayQty = local.yesterdayQty;
+        r.goneQty = local.goneQty;
+
         if (local.qty !== r.qty) {
           const who = r.verified_date ? r.verified_date.split('(')[0].trim() : 'Staff';
           
