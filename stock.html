@@ -114,6 +114,78 @@
     .stock-table thead tr{background:var(--elevated);border-bottom:1px solid var(--border2)}
     .stock-table th{padding:11px 16px;text-align:left;font-size:.68rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--txt3)}
     .stock-table th.center,.stock-table td.center{text-align:center}
+    .td-yesterday{text-align:center;width:115px}
+    .th-yesterday{text-align:center;color:var(--txt2)}
+    .th-qty{text-align:center;color:var(--txt1)}
+    .th-gone{text-align:center;color:var(--crimson)}
+    .yesterday-stock-val{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:36px;
+      padding:4px 9px;
+      border-radius:6px;
+      background:var(--surface);
+      border:1px solid var(--border2);
+      font-family:'Rajdhani',sans-serif;
+      font-size:.98rem;
+      font-weight:700;
+      color:var(--txt2);
+    }
+    .td-gone{text-align:center;width:115px}
+    .badge-gone-active{
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      padding:4px 10px;
+      border-radius:99px;
+      background:rgba(255,51,75,.14);
+      border:1px solid rgba(255,51,75,.35);
+      color:var(--crimson);
+      font-family:'Rajdhani',sans-serif;
+      font-size:.95rem;
+      font-weight:700;
+    }
+    .badge-gone-zero{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--txt3);
+      font-family:'Rajdhani',sans-serif;
+      font-size:.9rem;
+      font-weight:600;
+    }
+    .mobile-stock-strip{
+      display:none;
+      grid-area:stock-summary;
+      padding:8px 12px;
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:8px;
+      margin-top:2px;
+      font-size:.76rem;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+    .mobile-stock-strip .col-item{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:2px;
+    }
+    .mobile-stock-strip .col-lbl{
+      font-size:.62rem;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+      color:var(--txt3);
+      font-weight:700;
+    }
+    .mobile-stock-strip .col-val{
+      font-family:'Rajdhani',sans-serif;
+      font-size:.95rem;
+      font-weight:700;
+    }
     .stock-table tbody tr{border-bottom:1px solid var(--border);transition:background .25s ease}
     .stock-table tbody tr:last-child{border-bottom:none}
     .stock-table tbody tr:hover{background:rgba(255,255,255,.03)}
@@ -789,7 +861,9 @@
       .table-wrap{border-radius:10px;overflow:hidden}
       .stock-table thead{display:none}
       .stock-table,.stock-table tbody,.stock-table tr,.stock-table td{display:block;width:100%}
-      .stock-table tbody tr{padding:12px 14px;border-bottom:1px solid var(--border2);display:grid;grid-template-columns:1fr auto;grid-template-areas:"name cat" "status qty" "actions actions";align-items:center;gap:10px 8px;background:var(--card)}
+      .stock-table tbody tr{padding:12px 14px;border-bottom:1px solid var(--border2);display:grid;grid-template-columns:1fr auto;grid-template-areas:"name cat" "status qty" "stock-summary stock-summary" "actions actions";align-items:center;gap:10px 8px;background:var(--card)}
+      .stock-table td.td-yesterday, .stock-table td.td-gone{display:none!important}
+      .mobile-stock-strip{display:flex!important}
       .stock-table td{padding:0;border:none}
       .stock-table td.td-sl{display:none!important}
       .td-sl{display:none!important}
@@ -887,6 +961,11 @@
           <div class="kpi-value" id="kpi-out">0</div>
           <div class="kpi-desc">Qty = 0</div>
         </div>
+        <div class="kpi-card kpi-red" id="kpi-card-gone">
+          <div class="kpi-label">Gone Today</div>
+          <div class="kpi-value" id="kpi-gone" style="color:var(--crimson);">58</div>
+          <div class="kpi-desc">Dispatched since yesterday</div>
+        </div>
       </div>
 
       <div class="cat-tabs" id="cat-tabs">
@@ -937,7 +1016,9 @@
               <th>Product / Material</th>
               <th>Category</th>
               <th class="center">Status</th>
-              <th class="center">Quantity</th>
+              <th class="center th-yesterday" title="Stock verified yesterday (15/10/2026)">Yesterday Stock</th>
+              <th class="center th-qty" title="Current physical stock available today (16/10/2026)">Current Stock</th>
+              <th class="center th-gone" title="Quantity dispatched/gone between yesterday and today">Gone Today</th>
               <th class="center">Actions</th>
             </tr>
           </thead>
@@ -1182,727 +1263,985 @@ const DEFAULT_ITEMS = [
     "id": "INV-15506",
     "name": "Nex 1550",
     "category": "Inverter + Battery",
-    "qty": 6
+    "qty": 6,
+    "yesterdayQty": 6,
+    "goneQty": 0
   },
   {
     "id": "SOL-45826",
     "name": "Renew 620",
     "category": "Solar Panel",
-    "qty": 2
+    "qty": 2,
+    "yesterdayQty": 2,
+    "goneQty": 0
   },
   {
     "id": "SOL-60001",
     "name": "Vikram 600 Non DCR",
     "category": "Solar Panel",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "SOL-59501",
     "name": "Vikram 595",
     "category": "Solar Panel",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "SOL-58002",
     "name": "Vikram 580 Non DCR",
     "category": "Solar Panel",
-    "qty": 2
+    "qty": 2,
+    "yesterdayQty": 2,
+    "goneQty": 0
   },
   {
     "id": "SOL-55501",
     "name": "Vikram 555",
     "category": "Solar Panel",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "SOL-51671",
     "name": "Vikram 600",
     "category": "Solar Panel",
-    "qty": 5
+    "qty": 5,
+    "yesterdayQty": 5,
+    "goneQty": 0
   },
   {
     "id": "SOL-55001",
     "name": "Exide 550",
     "category": "Solar Panel",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "SOL-62010",
     "name": "Eastman 620",
     "category": "Solar Panel",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "SOL-19287",
     "name": "Waree 600",
     "category": "Solar Panel",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "MAI-49935",
     "name": "Energy meter 3 phase",
     "category": "Main",
-    "qty": 29
+    "qty": 29,
+    "yesterdayQty": 29,
+    "goneQty": 0
   },
   {
     "id": "LIT-15001",
     "name": "150 Ah Battery",
     "category": "Lithium Battery",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "SOL-61508",
     "name": "Renew 550",
     "category": "Solar Panel",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "INV-04000",
     "name": "Inverter 4 kW",
     "category": "Inverter",
-    "qty": 2
+    "qty": 2,
+    "yesterdayQty": 2,
+    "goneQty": 0
   },
   {
     "id": "INV-03300",
     "name": "Inverter 3.3 kW",
     "category": "Inverter",
-    "qty": 6
+    "qty": 8,
+    "yesterdayQty": 8,
+    "goneQty": 0
   },
   {
     "id": "INV-03005",
     "name": "Inverter 3 kW",
     "category": "Inverter",
-    "qty": 5
+    "qty": 31,
+    "yesterdayQty": 31,
+    "goneQty": 0
   },
   {
     "id": "LIT-10505",
     "name": "SPS LB 1050",
     "category": "Lithium Battery",
-    "qty": 4
+    "qty": 4,
+    "yesterdayQty": 4,
+    "goneQty": 0
   },
   {
     "id": "MAI-03003",
     "name": "ACDB - 3 Phase",
     "category": "Main",
-    "qty": 8
+    "qty": 8,
+    "yesterdayQty": 8,
+    "goneQty": 0
   },
   {
     "id": "SOL-25357",
     "name": "Renew 545",
     "category": "Solar Panel",
-    "qty": 6
+    "qty": 6,
+    "yesterdayQty": 6,
+    "goneQty": 0
   },
   {
     "id": "INV-20001",
     "name": "LS 2000",
     "category": "Inverter",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "SOL-10851",
     "name": "Renew 615 non dcr",
     "category": "Solar Panel",
-    "qty": 2
+    "qty": 2,
+    "yesterdayQty": 2,
+    "goneQty": 0
   },
   {
     "id": "INV-08000",
     "name": "Inverter 8 kW",
     "category": "Inverter",
-    "qty": 0
+    "qty": 0,
+    "yesterdayQty": 0,
+    "goneQty": 0
   },
   {
     "id": "MAI-04006",
     "name": "DCDB - 3 Phase",
     "category": "Main",
-    "qty": 13
+    "qty": 13,
+    "yesterdayQty": 13,
+    "goneQty": 0
   },
   {
     "id": "INV-30001",
     "name": "LS 3000",
     "category": "Inverter + Battery",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "INV-12505",
     "name": "BPS LS 1250",
     "category": "Inverter",
-    "qty": 5
+    "qty": 5,
+    "yesterdayQty": 5,
+    "goneQty": 0
   },
   {
     "id": "INV-13001",
     "name": "Gen 1300",
     "category": "Inverter",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "INV-48001",
     "name": "Online UPS 48V",
     "category": "Inverter",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "LIT-15255",
     "name": "Lithium 1525",
     "category": "Lithium Battery",
-    "qty": 5
+    "qty": 5,
+    "yesterdayQty": 5,
+    "goneQty": 0
   },
   {
     "id": "INV-13503",
     "name": "Rex 1350",
     "category": "Inverter",
-    "qty": 3
+    "qty": 3,
+    "yesterdayQty": 3,
+    "goneQty": 0
   },
   {
     "id": "SOL-63003",
     "name": "Vikram 630 Non DCR",
     "category": "Solar Panel",
-    "qty": 3
+    "qty": 3,
+    "yesterdayQty": 3,
+    "goneQty": 0
   },
   {
     "id": "INV-12001",
     "name": "HR 12000",
     "category": "Inverter",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "LIT-12252",
     "name": "Lithium 1225",
     "category": "Lithium Battery",
-    "qty": 2
+    "qty": 2,
+    "yesterdayQty": 2,
+    "goneQty": 0
   },
   {
     "id": "LIT-25602",
     "name": "Lithium 25.6",
     "category": "Lithium Battery",
-    "qty": 2
+    "qty": 2,
+    "yesterdayQty": 2,
+    "goneQty": 0
   },
   {
     "id": "LIT-24603",
     "name": "Viod 24.6",
     "category": "Lithium Battery",
-    "qty": 3
+    "qty": 3,
+    "yesterdayQty": 3,
+    "goneQty": 0
   },
   {
     "id": "MAI-60002",
     "name": "MPPT 60A",
     "category": "Main",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "SOL-08531",
     "name": "Waree 580",
     "category": "Solar Panel",
-    "qty": 5
+    "qty": 5,
+    "yesterdayQty": 5,
+    "goneQty": 0
   },
   {
     "id": "SOL-03463",
     "name": "Adani 535",
     "category": "Solar Panel",
-    "qty": 3
+    "qty": 3,
+    "yesterdayQty": 3,
+    "goneQty": 0
   },
   {
     "id": "SOL-29603",
     "name": "Adani 615",
     "category": "Solar Panel",
-    "qty": 9
+    "qty": 14,
+    "yesterdayQty": 27,
+    "goneQty": 13
   },
   {
     "id": "SOL-55703",
     "name": "Adani 555",
     "category": "Solar Panel",
-    "qty": 18
+    "qty": 6,
+    "yesterdayQty": 18,
+    "goneQty": 12
   },
   {
     "id": "SOL-49672",
     "name": "Adani 560",
     "category": "Solar Panel",
-    "qty": 0
+    "qty": 0,
+    "yesterdayQty": 0,
+    "goneQty": 0
   },
   {
     "id": "INV-79823",
     "name": "Microtek 5kW S/P",
     "category": "Inverter",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "INV-59001",
     "name": "Sps inverter LS 1050 ( DC12v)",
     "category": "Inverter",
-    "qty": 4
+    "qty": 3,
+    "yesterdayQty": 4,
+    "goneQty": 1
   },
   {
     "id": "INV-04528",
     "name": "Sps inverter LS 1250 ( DC12v)",
     "category": "Inverter",
-    "qty": 5
+    "qty": 5,
+    "yesterdayQty": 5,
+    "goneQty": 0
   },
   {
     "id": "SOL-08293",
     "name": "G Ai pipe apola (1.5 - 1.5)",
     "category": "Main",
-    "qty": 33
+    "qty": 33,
+    "yesterdayQty": 33,
+    "goneQty": 0
   },
   {
     "id": "SOL-06018",
     "name": "G Ai pipe apola (2 - 1)",
     "category": "Solar Panel",
-    "qty": 45
+    "qty": 45,
+    "yesterdayQty": 45,
+    "goneQty": 0
   },
   {
     "id": "SOL-28640",
     "name": "G Ai pipe apola (1 - 1)",
     "category": "Main",
-    "qty": 20
+    "qty": 20,
+    "yesterdayQty": 20,
+    "goneQty": 0
   },
   {
     "id": "SOL-77912",
     "name": "G Ai pipe apola (2.5 - 1.5)",
     "category": "Main",
-    "qty": 126
+    "qty": 126,
+    "yesterdayQty": 126,
+    "goneQty": 0
   },
   {
     "id": "INV-50003",
     "name": "Microtek 5kW 3 Phase",
     "category": "Inverter",
-    "qty": 1
+    "qty": 0,
+    "yesterdayQty": 1,
+    "goneQty": 1
   },
   {
     "id": "MAI-07003",
     "name": "Meter Box - 3 Phase",
     "category": "Main",
-    "qty": 7
+    "qty": 7,
+    "yesterdayQty": 7,
+    "goneQty": 0
   },
   {
     "id": "INV-12100",
     "name": "12V 1000",
     "category": "Inverter + Battery",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "SOL-61019",
     "name": "Waree 610",
     "category": "Solar Panel",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "SOL-52536",
     "name": "Waree 525",
     "category": "Solar Panel",
-    "qty": 14
+    "qty": 14,
+    "yesterdayQty": 14,
+    "goneQty": 0
   },
   {
     "id": "SOL-62001",
     "name": "Adani 620",
     "category": "Solar Panel",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "INV-06000",
     "name": "Inverter 6 kW S/P",
     "category": "Inverter",
-    "qty": 0
+    "qty": 0,
+    "yesterdayQty": 0,
+    "goneQty": 0
   },
   {
     "id": "INV-40001",
     "name": "LS 4000",
     "category": "Inverter + Battery",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "INV-20002",
     "name": "HS 2000",
     "category": "Inverter + Battery",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "SOL-62501",
     "name": "Adani 625",
     "category": "Solar Panel",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "SOL-75767",
     "name": "Renew  545 (600)",
     "category": "Solar Panel",
-    "qty": 6
+    "qty": 6,
+    "yesterdayQty": 6,
+    "goneQty": 0
   },
   {
     "id": "SOL-20743",
     "name": "Adani 550",
     "category": "Solar Panel",
-    "qty": 9
+    "qty": 9,
+    "yesterdayQty": 9,
+    "goneQty": 0
   },
   {
     "id": "SOL-58080",
     "name": "Emmvee 610",
     "category": "Solar Panel",
-    "qty": 0
+    "qty": 0,
+    "yesterdayQty": 0,
+    "goneQty": 0
   },
   {
     "id": "SOL-54504",
     "name": "Microtek 545",
     "category": "Solar Panel",
-    "qty": 4
+    "qty": 4,
+    "yesterdayQty": 4,
+    "goneQty": 0
   },
   {
     "id": "SOL-13107",
     "name": "Adani 630 non dcr",
     "category": "Solar Panel",
-    "qty": 5
+    "qty": 1,
+    "yesterdayQty": 5,
+    "goneQty": 4
   },
   {
     "id": "SOL-55803",
     "name": "Emmvee 560",
     "category": "Solar Panel",
-    "qty": 4
+    "qty": 4,
+    "yesterdayQty": 4,
+    "goneQty": 0
   },
   {
     "id": "SOL-56772",
     "name": "Emmvee 580",
     "category": "Solar Panel",
-    "qty": 9
+    "qty": 9,
+    "yesterdayQty": 9,
+    "goneQty": 0
   },
   {
     "id": "SOL-15992",
     "name": "Net meter 3 phase",
     "category": "Main",
-    "qty": 39
+    "qty": 38,
+    "yesterdayQty": 39,
+    "goneQty": 1
   },
   {
     "id": "SOL-60505",
     "name": "Adani 605",
     "category": "Solar Panel",
-    "qty": 5
+    "qty": 5,
+    "yesterdayQty": 5,
+    "goneQty": 0
   },
   {
     "id": "SOL-63514",
     "name": "Adani 635",
     "category": "Solar Panel",
-    "qty": 0
+    "qty": 0,
+    "yesterdayQty": 0,
+    "goneQty": 0
   },
   {
     "id": "INV-01",
     "name": "Inverter",
     "category": "Inverter",
-    "qty": 11
+    "qty": 11,
+    "yesterdayQty": 12,
+    "goneQty": 1
   },
   {
     "id": "LB-01",
     "name": "Lithium Battery",
     "category": "Lithium Battery",
-    "qty": 80
+    "qty": 80,
+    "yesterdayQty": 80,
+    "goneQty": 0
   },
   {
     "id": "CB-01",
     "name": "Inverter + Lithium Battery",
     "category": "Inverter + Battery",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "M-03",
     "name": "ACDB - Single Phase",
     "category": "Main",
-    "qty": 16
+    "qty": 16,
+    "yesterdayQty": 16,
+    "goneQty": 0
   },
   {
     "id": "M-04",
     "name": "DCDB - Single Phase",
     "category": "Main",
-    "qty": 4
+    "qty": 4,
+    "yesterdayQty": 4,
+    "goneQty": 0
   },
   {
     "id": "M-05",
     "name": "Energy Meter - Single Phase",
     "category": "Main",
-    "qty": 34
+    "qty": 31,
+    "yesterdayQty": 34,
+    "goneQty": 3
   },
   {
     "id": "M-06",
     "name": "Net Meter - Single Phase",
     "category": "Main",
-    "qty": 30
+    "qty": 30,
+    "yesterdayQty": 30,
+    "goneQty": 0
   },
   {
     "id": "M-07",
     "name": "Meter Box - Single Phase",
     "category": "Main",
-    "qty": 17
+    "qty": 17,
+    "yesterdayQty": 17,
+    "goneQty": 0
   },
   {
     "id": "M-08",
     "name": "Isolator - 2/4",
     "category": "Main",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "M-09",
     "name": "Earth Pit Chamber",
     "category": "Main",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "M-10",
     "name": "Earth Compound",
     "category": "Main",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "M-11",
     "name": "Earth Rod",
     "category": "Main",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "M-12",
     "name": "Lightning Arrester",
     "category": "Main",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "M-13",
     "name": "Earth Cable 50 SqMM Yellow",
     "category": "Main",
-    "qty": 10
+    "qty": 6,
+    "yesterdayQty": 10,
+    "goneQty": 4
   },
   {
     "id": "M-14",
     "name": "Earth Cable 16 SqMM Green",
     "category": "Main",
-    "qty": 10
+    "qty": 20,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "M-15",
     "name": "G.I. Pipe 2x5 - 1.5",
     "category": "Main",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "M-16",
     "name": "G.I. Pipe 1x1",
     "category": "Main",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "M-17",
-    "name": "DC Cable",
+    "name": "DC Cable Black",
     "category": "Main",
-    "qty": 10
+    "qty": 16,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "M-18",
     "name": "AC Cable",
     "category": "Main",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "M-19",
     "name": "P.V.C Wiring Pipe 20/25 MM",
     "category": "Main",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "M-20",
     "name": "Dummy Square Plate 4 inch",
     "category": "Main",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "M-21",
     "name": "Copper Lug 10 MM",
     "category": "Main",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "M-22",
     "name": "Epoxy Thinner / Paint",
     "category": "Main",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "M-23",
     "name": "Tar Sheet",
     "category": "Main",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "W-01",
     "name": "Neutral Link",
     "category": "Wiring Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "W-02",
     "name": "Earth Bench",
     "category": "Wiring Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "W-03",
     "name": "Cable Trench",
     "category": "Wiring Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "W-04",
     "name": "Nylon Holder",
     "category": "Wiring Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "W-05",
     "name": "MC4 Connector",
     "category": "Wiring Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "W-06",
     "name": "Flexible Conduit 20/25",
     "category": "Wiring Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "W-07",
     "name": "Conduit Tube",
     "category": "Wiring Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "W-08",
     "name": "Earth Cable - 50 / 16 / 4",
     "category": "Wiring Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "W-09",
     "name": "PVC Elbow / Bow / Bend / Tee",
     "category": "Wiring Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "W-10",
     "name": "Fisher",
     "category": "Wiring Kit",
-    "qty": 1000
+    "qty": 1000,
+    "yesterdayQty": 1000,
+    "goneQty": 0
   },
   {
     "id": "W-11",
     "name": "Cable Tie",
     "category": "Wiring Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "W-12",
     "name": "Clamp",
     "category": "Wiring Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "W-13",
     "name": "Insulation Tape",
     "category": "Wiring Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "W-14",
     "name": "Screw",
     "category": "Wiring Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "V-01",
     "name": "GI End Cap",
     "category": "Welding Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "V-02",
     "name": "Anchor Bolt",
     "category": "Welding Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "V-03",
     "name": "Welding Rod",
     "category": "Welding Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "V-04",
     "name": "Cutting Wheel",
     "category": "Welding Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "V-05",
     "name": "Mild End",
     "category": "Welding Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "V-06",
     "name": "Silicon",
     "category": "Welding Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "V-07",
     "name": "Self Screw",
     "category": "Welding Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "V-08",
     "name": "Sleeve",
     "category": "Welding Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "V-09",
     "name": "Lightning Screw",
     "category": "Welding Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "V-10",
     "name": "GI Pipe",
     "category": "Welding Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "V-11",
     "name": "Tar Sheet",
     "category": "Welding Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "V-12",
     "name": "Welding Rod End Cap",
     "category": "Welding Kit",
-    "qty": 10
+    "qty": 10,
+    "yesterdayQty": 10,
+    "goneQty": 0
   },
   {
     "id": "INV-40002",
     "name": "Solaire 4kW S/P",
     "category": "Inverter",
-    "qty": 2
+    "qty": 2,
+    "yesterdayQty": 2,
+    "goneQty": 0
   },
   {
     "id": "LIT-51201",
     "name": "SPS Lithium 51.2V (Return)",
     "category": "Lithium Battery",
-    "qty": 1
+    "qty": 1,
+    "yesterdayQty": 1,
+    "goneQty": 0
   },
   {
     "id": "LIT-12810",
     "name": "Vion 12.8 (100AH)",
     "category": "Lithium Battery",
-    "qty": 10
+    "qty": 9,
+    "yesterdayQty": 10,
+    "goneQty": 1
   },
   {
     "id": "LIT-12820",
     "name": "Vion 12.8 (200AH)",
     "category": "Lithium Battery",
-    "qty": 3
+    "qty": 3,
+    "yesterdayQty": 3,
+    "goneQty": 0
+  },
+  {
+    "id": "SOL-60036",
+    "name": "Vikram 600 DCR",
+    "category": "Solar Panel",
+    "yesterdayQty": 36,
+    "qty": 19,
+    "goneQty": 17
+  },
+  {
+    "id": "M-17B",
+    "name": "DC Cable Red",
+    "category": "Main",
+    "yesterdayQty": 10,
+    "qty": 16,
+    "goneQty": 0
   }
 ];
 
@@ -2540,15 +2879,33 @@ async function fetchCloudData() {
     const data = await res.json();
     if (!Array.isArray(data) || data.length === 0) return null;
 
-    return data.filter(row => row.category !== '__audit_log__').map(row => ({
-      id: row.product_id,
-      name: row.name,
-      category: row.category,
-      qty: typeof row.daily_stock === 'number' ? row.daily_stock : (parseInt(row.daily_stock, 10) || 0),
-      brand: row.brand || 'Royal Eye',
-      verified_date: row.verified_date || null,
-      sort_order: row.sort_order || 0
-    }));
+    return data.filter(row => row.category !== '__audit_log__').map(row => {
+      let yesterdayQty = typeof row.daily_stock === 'number' ? row.daily_stock : (parseInt(row.daily_stock, 10) || 0);
+      let goneQty = 0;
+      if (row.spec_highlights) {
+        try {
+          const extra = JSON.parse(row.spec_highlights);
+          if (extra.yesterdayQty !== undefined) yesterdayQty = extra.yesterdayQty;
+          if (extra.goneQty !== undefined) goneQty = extra.goneQty;
+        } catch(e) {}
+      }
+      const def = DEFAULT_ITEMS.find(d => d.id === row.product_id || (d.name && row.name && d.name.toLowerCase() === row.name.toLowerCase()));
+      if (def) {
+        if (def.yesterdayQty !== undefined) yesterdayQty = def.yesterdayQty;
+        if (def.goneQty !== undefined) goneQty = def.goneQty;
+      }
+      return {
+        id: row.product_id,
+        name: row.name,
+        category: row.category,
+        yesterdayQty: yesterdayQty,
+        qty: typeof row.daily_stock === 'number' ? row.daily_stock : (parseInt(row.daily_stock, 10) || 0),
+        goneQty: goneQty,
+        brand: row.brand || 'Royal Eye',
+        verified_date: row.verified_date || null,
+        sort_order: row.sort_order || 0
+      };
+    });
   } catch(err) {
     console.warn("Cloud fetch error:", err);
     return null;
@@ -2704,6 +3061,9 @@ function updateItemQuantity(id, newQty, productName) {
 
   const diff = target - current;
   it.qty = target;
+  if (it.yesterdayQty !== undefined) {
+    it.goneQty = Math.max(0, it.yesterdayQty - target);
+  }
   saveLocalCache();
   updateKPIs();
 
@@ -2717,6 +3077,23 @@ function updateItemQuantity(id, newQty, productName) {
     }
     const input = tr.querySelector('.qty-num');
     if (input && input.value != it.qty) input.value = it.qty;
+
+    const goneTd = tr.querySelector('.td-gone');
+    if (goneTd) {
+      goneTd.innerHTML = it.goneQty > 0 
+        ? `<span class="badge-gone-active" title="${it.goneQty} units gone today">&minus;${it.goneQty}</span>` 
+        : `<span class="badge-gone-zero">0</span>`;
+    }
+    const mobileGoneVal = tr.querySelector('.mobile-stock-strip .col-item:last-child .col-val');
+    if (mobileGoneVal) {
+      mobileGoneVal.textContent = it.goneQty > 0 ? `-${it.goneQty}` : '0';
+      mobileGoneVal.style.color = it.goneQty > 0 ? 'var(--crimson)' : 'var(--txt3)';
+    }
+    const mobileCurVal = tr.querySelector('.mobile-stock-strip .col-item:nth-child(2) .col-val');
+    if (mobileCurVal) {
+      mobileCurVal.textContent = it.qty;
+      mobileCurVal.style.color = it.qty <= 0 ? 'var(--crimson)' : (it.qty <= 5 ? 'var(--amber)' : 'var(--green)');
+    }
   }
 
   showToast(`${productName || it.name}: ${it.qty}`, 'success');
@@ -2880,6 +3257,9 @@ function render(){
   empty.style.display = 'none';
   tbody.innerHTML = list.map((it, i) => {
     const s = getStatus(it.qty);
+    const yesterdayVal = it.yesterdayQty !== undefined ? it.yesterdayQty : it.qty;
+    const goneCount = it.goneQty !== undefined ? it.goneQty : Math.max(0, yesterdayVal - it.qty);
+
     return '<tr data-id="' + it.id + '">' +
       '<td class="td-sl">' + (i+1) + '</td>' +
       '<td class="td-name">' +
@@ -2893,11 +3273,22 @@ function render(){
       '</td>' +
       '<td class="td-cat"><span class="cat-badge ' + catClass(it.category) + '">' + escHtml(it.category) + '</span></td>' +
       '<td class="td-status center"><span class="status-badge s-' + s + '"><span class="s-dot"></span>' + statusLabel(s) + '</span></td>' +
+      '<td class="td-yesterday center"><span class="yesterday-stock-val">' + yesterdayVal + '</span></td>' +
       '<td class="td-qty center"><div class="qty-wrap">' +
         '<button class="qty-btn" data-action="dec" data-id="' + it.id + '" title="Decrease">&#8722;</button>' +
         '<input class="qty-num" type="number" min="0" value="' + it.qty + '" data-id="' + it.id + '" />' +
         '<button class="qty-btn" data-action="inc" data-id="' + it.id + '" title="Increase">+</button>' +
       '</div></td>' +
+      '<td class="td-gone center">' +
+        (goneCount > 0 
+          ? '<span class="badge-gone-active" title="' + goneCount + ' units gone today">&minus;' + goneCount + '</span>' 
+          : '<span class="badge-gone-zero">0</span>') +
+      '</td>' +
+      '<td class="mobile-stock-strip">' +
+        '<div class="col-item"><span class="col-lbl">Yesterday</span><span class="col-val" style="color:var(--txt2);">' + yesterdayVal + '</span></div>' +
+        '<div class="col-item"><span class="col-lbl">Current Stock</span><span class="col-val" style="color:' + (it.qty <= 0 ? 'var(--crimson)' : (it.qty <= 5 ? 'var(--amber)' : 'var(--green)')) + ';">' + it.qty + '</span></div>' +
+        '<div class="col-item"><span class="col-lbl">Gone Today</span><span class="col-val" style="color:' + (goneCount > 0 ? 'var(--crimson)' : 'var(--txt3)') + ';">' + (goneCount > 0 ? '-' + goneCount : '0') + '</span></div>' +
+      '</td>' +
       '<td class="td-actions center">' +
         '<div class="action-group">' +
           '<button class="action-btn" data-action="edit" data-id="' + it.id + '" title="Edit product details">' +
@@ -2920,6 +3311,11 @@ function updateKPIs(){
   document.getElementById('kpi-in').textContent    = items.filter(i => getStatus(i.qty) === 'in').length;
   document.getElementById('kpi-low').textContent   = items.filter(i => getStatus(i.qty) === 'low').length;
   document.getElementById('kpi-out').textContent   = items.filter(i => getStatus(i.qty) === 'out').length;
+  const goneEl = document.getElementById('kpi-gone');
+  if (goneEl) {
+    const totalGone = items.reduce((sum, i) => sum + (parseInt(i.goneQty, 10) || 0), 0);
+    goneEl.textContent = totalGone;
+  }
 }
 
 // ── UI Events ────────────────────────────────────────────────────────
